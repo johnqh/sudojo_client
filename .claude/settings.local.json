@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm link)",
+      "Bash(npm link:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run test:run:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:fix:*)",
+      "Bash(npm run check-all:*)",
+      "Bash(npm run clean:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
