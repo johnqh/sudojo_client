@@ -1,5 +1,6 @@
-import type { BaseResponse, NetworkClient, Optional } from "@sudobility/types";
+import type { NetworkClient } from "@sudobility/types";
 import type {
+  BaseResponse,
   Board,
   BoardCreateRequest,
   BoardQueryParams,
@@ -19,6 +20,8 @@ import type {
   Level,
   LevelCreateRequest,
   LevelUpdateRequest,
+  Optional,
+  SubscriptionResult,
   Technique,
   TechniqueCreateRequest,
   TechniqueQueryParams,
@@ -125,6 +128,10 @@ const createApiConfig = (config: SudojoConfig) => ({
     CHALLENGES: "/api/v1/challenges",
     CHALLENGES_RANDOM: "/api/v1/challenges/random",
     CHALLENGE: (uuid: string) => `/api/v1/challenges/${uuid}`,
+
+    // Users
+    USER_SUBSCRIPTIONS: (userId: string) =>
+      `/api/v1/users/${userId}/subscriptions`,
   },
   DEFAULT_HEADERS: {
     "Content-Type": "application/json",
@@ -255,9 +262,9 @@ export class SudojoClient {
   async deleteLevel(
     auth: SudojoAuth,
     uuid: string,
-  ): Promise<BaseResponse<null>> {
+  ): Promise<BaseResponse<Level>> {
     const validatedUuid = validateUUID(uuid, "Level UUID");
-    return this.request<BaseResponse<null>>(
+    return this.request<BaseResponse<Level>>(
       this.config.ENDPOINTS.LEVEL(validatedUuid),
       {
         method: "DELETE",
@@ -325,9 +332,9 @@ export class SudojoClient {
   async deleteTechnique(
     auth: SudojoAuth,
     uuid: string,
-  ): Promise<BaseResponse<null>> {
+  ): Promise<BaseResponse<Technique>> {
     const validatedUuid = validateUUID(uuid, "Technique UUID");
-    return this.request<BaseResponse<null>>(
+    return this.request<BaseResponse<Technique>>(
       this.config.ENDPOINTS.TECHNIQUE(validatedUuid),
       {
         method: "DELETE",
@@ -398,9 +405,9 @@ export class SudojoClient {
   async deleteLearning(
     auth: SudojoAuth,
     uuid: string,
-  ): Promise<BaseResponse<null>> {
+  ): Promise<BaseResponse<Learning>> {
     const validatedUuid = validateUUID(uuid, "Learning UUID");
-    return this.request<BaseResponse<null>>(
+    return this.request<BaseResponse<Learning>>(
       this.config.ENDPOINTS.LEARNING_ITEM(validatedUuid),
       {
         method: "DELETE",
@@ -480,9 +487,9 @@ export class SudojoClient {
   async deleteBoard(
     auth: SudojoAuth,
     uuid: string,
-  ): Promise<BaseResponse<null>> {
+  ): Promise<BaseResponse<Board>> {
     const validatedUuid = validateUUID(uuid, "Board UUID");
-    return this.request<BaseResponse<null>>(
+    return this.request<BaseResponse<Board>>(
       this.config.ENDPOINTS.BOARD(validatedUuid),
       {
         method: "DELETE",
@@ -560,9 +567,9 @@ export class SudojoClient {
   async deleteDaily(
     auth: SudojoAuth,
     uuid: string,
-  ): Promise<BaseResponse<null>> {
+  ): Promise<BaseResponse<Daily>> {
     const validatedUuid = validateUUID(uuid, "Daily UUID");
-    return this.request<BaseResponse<null>>(
+    return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILY(validatedUuid),
       {
         method: "DELETE",
@@ -651,12 +658,31 @@ export class SudojoClient {
   async deleteChallenge(
     auth: SudojoAuth,
     uuid: string,
-  ): Promise<BaseResponse<null>> {
+  ): Promise<BaseResponse<Challenge>> {
     const validatedUuid = validateUUID(uuid, "Challenge UUID");
-    return this.request<BaseResponse<null>>(
+    return this.request<BaseResponse<Challenge>>(
       this.config.ENDPOINTS.CHALLENGE(validatedUuid),
       {
         method: "DELETE",
+        auth,
+      },
+    );
+  }
+
+  // ===========================================================================
+  // Users
+  // ===========================================================================
+
+  async getUserSubscription(
+    auth: SudojoAuth,
+    userId: string,
+  ): Promise<BaseResponse<SubscriptionResult>> {
+    if (!userId || userId.length === 0 || userId.length > 128) {
+      throw new Error(`Invalid userId: "${userId}". Expected 1-128 characters`);
+    }
+    return this.request<BaseResponse<SubscriptionResult>>(
+      this.config.ENDPOINTS.USER_SUBSCRIPTIONS(userId),
+      {
         auth,
       },
     );

@@ -11,8 +11,9 @@ import {
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import type { BaseResponse, NetworkClient } from "@sudobility/types";
+import type { NetworkClient } from "@sudobility/types";
 import type {
+  BaseResponse,
   Learning,
   LearningCreateRequest,
   LearningQueryParams,
@@ -167,7 +168,7 @@ export const useSudojoDeleteLearning = (
   networkClient: NetworkClient,
   config: SudojoConfig,
 ): UseMutationResult<
-  BaseResponse<null>,
+  BaseResponse<Learning>,
   Error,
   { auth: SudojoAuth; uuid: string }
 > => {

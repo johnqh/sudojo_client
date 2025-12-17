@@ -56,6 +56,10 @@ export const queryKeys = {
       difficulty?: string | undefined;
     }) => [...sudojoBase(), "challenges", "random", filters] as const,
     challenge: (uuid: string) => [...sudojoBase(), "challenges", uuid] as const,
+
+    // Users
+    userSubscription: (userId: string) =>
+      [...sudojoBase(), "users", userId, "subscription"] as const,
   },
 } as const;
 

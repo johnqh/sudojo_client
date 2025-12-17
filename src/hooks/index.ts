@@ -92,3 +92,9 @@ export {
   useSudojoRandomChallenge,
   useSudojoUpdateChallenge,
 } from "./use-sudojo-challenges";
+
+// ============================================================================
+// User hooks
+// ============================================================================
+
+export { useSudojoUserSubscription } from "./use-sudojo-users";

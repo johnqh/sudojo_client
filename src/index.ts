@@ -57,6 +57,8 @@ export {
   useSudojoDeleteChallenge,
   useSudojoRandomChallenge,
   useSudojoUpdateChallenge,
+  // Users
+  useSudojoUserSubscription,
 } from "./hooks";
 export type { QueryKey } from "./hooks";
 
@@ -86,6 +88,8 @@ export type {
   PaginatedResponse,
   PaginationInfo,
   PaginationOptions,
+  RevenueCatEntitlement,
+  SubscriptionResult,
   Technique,
   TechniqueCreateRequest,
   TechniqueQueryParams,

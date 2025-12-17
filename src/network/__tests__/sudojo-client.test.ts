@@ -213,7 +213,15 @@ describe("SudojoClient", () => {
     it("should delete a level with authentication", async () => {
       const mockResponse = {
         success: true,
-        data: null,
+        data: {
+          uuid: VALID_UUID,
+          index: 1,
+          title: "Deleted Level",
+          text: null,
+          requires_subscription: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
         timestamp: new Date().toISOString(),
       };
 
@@ -226,6 +234,7 @@ describe("SudojoClient", () => {
       const result = await client.deleteLevel(TEST_AUTH, VALID_UUID);
 
       expect(result.success).toBe(true);
+      expect(result.data?.uuid).toBe(VALID_UUID);
       expect(
         mockNetworkClient.wasUrlCalled(
           `https://test-sudojo.example.com/api/v1/levels/${VALID_UUID}`,
@@ -753,11 +762,96 @@ describe("SudojoClient", () => {
     });
   });
 
+  describe("users", () => {
+    it("should get user subscription with authentication", async () => {
+      const mockResponse = {
+        success: true,
+        data: {
+          hasSubscription: true,
+          entitlement: {
+            expires_date: "2025-12-31T23:59:59Z",
+            grace_period_expires_date: null,
+            product_identifier: "sudojo_premium_monthly",
+            purchase_date: "2025-01-01T00:00:00Z",
+          },
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      const userId = "firebase-user-123";
+
+      mockNetworkClient.setMockResponse(
+        `https://test-sudojo.example.com/api/v1/users/${userId}/subscriptions`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getUserSubscription(TEST_AUTH, userId);
+
+      expect(result.success).toBe(true);
+      expect(result.data?.hasSubscription).toBe(true);
+      expect(result.data?.entitlement?.product_identifier).toBe(
+        "sudojo_premium_monthly",
+      );
+      expect(
+        mockNetworkClient.wasUrlCalled(
+          `https://test-sudojo.example.com/api/v1/users/${userId}/subscriptions`,
+        ),
+      ).toBe(true);
+    });
+
+    it("should get user subscription without active subscription", async () => {
+      const mockResponse = {
+        success: true,
+        data: {
+          hasSubscription: false,
+          entitlement: null,
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      const userId = "firebase-user-456";
+
+      mockNetworkClient.setMockResponse(
+        `https://test-sudojo.example.com/api/v1/users/${userId}/subscriptions`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getUserSubscription(TEST_AUTH, userId);
+
+      expect(result.success).toBe(true);
+      expect(result.data?.hasSubscription).toBe(false);
+      expect(result.data?.entitlement).toBeNull();
+    });
+
+    it("should throw error for empty userId", async () => {
+      await expect(client.getUserSubscription(TEST_AUTH, "")).rejects.toThrow(
+        "Invalid userId",
+      );
+    });
+
+    it("should throw error for userId exceeding max length", async () => {
+      const longUserId = "a".repeat(129);
+      await expect(
+        client.getUserSubscription(TEST_AUTH, longUserId),
+      ).rejects.toThrow("Invalid userId");
+    });
+  });
+
   describe("UUID validation", () => {
     it("should accept valid UUIDs", async () => {
       const mockResponse = {
         success: true,
-        data: null,
+        data: {
+          uuid: VALID_UUID,
+          index: 1,
+          title: "Test Level",
+          text: null,
+          requires_subscription: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
         timestamp: new Date().toISOString(),
       };
 

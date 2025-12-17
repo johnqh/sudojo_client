@@ -11,8 +11,9 @@ import {
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import type { BaseResponse, NetworkClient } from "@sudobility/types";
+import type { NetworkClient } from "@sudobility/types";
 import type {
+  BaseResponse,
   Challenge,
   ChallengeCreateRequest,
   ChallengeQueryParams,
@@ -199,7 +200,7 @@ export const useSudojoDeleteChallenge = (
   networkClient: NetworkClient,
   config: SudojoConfig,
 ): UseMutationResult<
-  BaseResponse<null>,
+  BaseResponse<Challenge>,
   Error,
   { auth: SudojoAuth; uuid: string }
 > => {

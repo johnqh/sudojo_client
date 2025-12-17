@@ -12,7 +12,11 @@
       "Bash(npm run check-all:*)",
       "Bash(npm run clean:*)",
       "Bash(done)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm view:*)",
+      "Bash(cat:*)",
+      "Bash(npm pack:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
