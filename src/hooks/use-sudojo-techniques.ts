@@ -30,6 +30,7 @@ import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 export const useSudojoTechniques = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   queryParams?: TechniqueQueryParams,
   options?: Omit<
     UseQueryOptions<BaseResponse<Technique[]>>,
@@ -42,8 +43,8 @@ export const useSudojoTechniques = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Technique[]>> => {
-    return client.getTechniques(queryParams);
-  }, [client, queryParams]);
+    return client.getTechniques(auth, queryParams);
+  }, [client, auth, queryParams]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.techniques({
@@ -51,6 +52,7 @@ export const useSudojoTechniques = (
     }),
     queryFn,
     staleTime: STALE_TIMES.TECHNIQUES,
+    enabled: !!auth?.accessToken,
     ...options,
   });
 };
@@ -61,6 +63,7 @@ export const useSudojoTechniques = (
 export const useSudojoTechnique = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   uuid: string,
   options?: Omit<
     UseQueryOptions<BaseResponse<Technique>>,
@@ -73,14 +76,14 @@ export const useSudojoTechnique = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Technique>> => {
-    return client.getTechnique(uuid);
-  }, [client, uuid]);
+    return client.getTechnique(auth, uuid);
+  }, [client, auth, uuid]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.technique(uuid),
     queryFn,
     staleTime: STALE_TIMES.TECHNIQUES,
-    enabled: !!uuid,
+    enabled: !!uuid && !!auth?.accessToken,
     ...options,
   });
 };

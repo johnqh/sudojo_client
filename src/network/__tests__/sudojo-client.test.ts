@@ -98,7 +98,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getLevels();
+      const result = await client.getLevels(TEST_AUTH);
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
@@ -130,14 +130,14 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getLevel(VALID_UUID);
+      const result = await client.getLevel(TEST_AUTH, VALID_UUID);
 
       expect(result.success).toBe(true);
       expect(result.data?.uuid).toBe(VALID_UUID);
     });
 
     it("should throw error for invalid UUID format", async () => {
-      await expect(client.getLevel("invalid-uuid")).rejects.toThrow(
+      await expect(client.getLevel(TEST_AUTH, "invalid-uuid")).rejects.toThrow(
         "Invalid Level UUID format",
       );
     });
@@ -268,7 +268,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getTechniques();
+      const result = await client.getTechniques(TEST_AUTH);
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
@@ -287,7 +287,9 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getTechniques({ level_uuid: VALID_UUID });
+      const result = await client.getTechniques(TEST_AUTH, {
+        level_uuid: VALID_UUID,
+      });
 
       expect(result.success).toBe(true);
       expect(
@@ -355,7 +357,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getLearning();
+      const result = await client.getLearning(TEST_AUTH);
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
@@ -374,7 +376,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getLearning({
+      const result = await client.getLearning(TEST_AUTH, {
         technique_uuid: VALID_UUID,
         language_code: "en",
       });
@@ -413,7 +415,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getBoards();
+      const result = await client.getBoards(TEST_AUTH);
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
@@ -442,7 +444,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getRandomBoard();
+      const result = await client.getRandomBoard(TEST_AUTH);
 
       expect(result.success).toBe(true);
       expect(result.data?.uuid).toBe(VALID_UUID);
@@ -470,7 +472,9 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getRandomBoard({ level_uuid: VALID_UUID });
+      const result = await client.getRandomBoard(TEST_AUTH, {
+        level_uuid: VALID_UUID,
+      });
 
       expect(result.success).toBe(true);
     });
@@ -541,7 +545,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getDailies();
+      const result = await client.getDailies(TEST_AUTH);
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
@@ -570,7 +574,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getRandomDaily();
+      const result = await client.getRandomDaily(TEST_AUTH);
 
       expect(result.success).toBe(true);
     });
@@ -598,7 +602,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getTodayDaily();
+      const result = await client.getTodayDaily(TEST_AUTH);
 
       expect(result.success).toBe(true);
     });
@@ -626,20 +630,20 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getDailyByDate("2025-01-15");
+      const result = await client.getDailyByDate(TEST_AUTH, "2025-01-15");
 
       expect(result.success).toBe(true);
       expect(result.data?.date).toBe("2025-01-15");
     });
 
     it("should throw error for invalid date format", async () => {
-      await expect(client.getDailyByDate("01-15-2025")).rejects.toThrow(
-        "Invalid date format",
-      );
+      await expect(
+        client.getDailyByDate(TEST_AUTH, "01-15-2025"),
+      ).rejects.toThrow("Invalid date format");
 
-      await expect(client.getDailyByDate("2025/01/15")).rejects.toThrow(
-        "Invalid date format",
-      );
+      await expect(
+        client.getDailyByDate(TEST_AUTH, "2025/01/15"),
+      ).rejects.toThrow("Invalid date format");
     });
   });
 
@@ -673,7 +677,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getChallenges();
+      const result = await client.getChallenges(TEST_AUTH);
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
@@ -692,7 +696,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getChallenges({
+      const result = await client.getChallenges(TEST_AUTH, {
         level_uuid: VALID_UUID,
         difficulty: "5",
       });
@@ -722,7 +726,7 @@ describe("SudojoClient", () => {
         "GET",
       );
 
-      const result = await client.getRandomChallenge();
+      const result = await client.getRandomChallenge(TEST_AUTH);
 
       expect(result.success).toBe(true);
     });
@@ -862,22 +866,22 @@ describe("SudojoClient", () => {
       );
 
       // Should not throw
-      await expect(client.getLevel(VALID_UUID)).resolves.toBeDefined();
+      await expect(client.getLevel(TEST_AUTH, VALID_UUID)).resolves.toBeDefined();
     });
 
     it("should reject invalid UUIDs", async () => {
       // Too short
-      await expect(client.getLevel("123")).rejects.toThrow(
+      await expect(client.getLevel(TEST_AUTH, "123")).rejects.toThrow(
         "Invalid Level UUID format",
       );
 
       // Wrong format
-      await expect(client.getLevel("not-a-uuid")).rejects.toThrow(
+      await expect(client.getLevel(TEST_AUTH, "not-a-uuid")).rejects.toThrow(
         "Invalid Level UUID format",
       );
 
       // Empty
-      await expect(client.getLevel("")).rejects.toThrow(
+      await expect(client.getLevel(TEST_AUTH, "")).rejects.toThrow(
         "Level UUID is required",
       );
     });

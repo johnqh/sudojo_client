@@ -30,6 +30,7 @@ import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 export const useSudojoBoards = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   queryParams?: BoardQueryParams,
   options?: Omit<
     UseQueryOptions<BaseResponse<Board[]>>,
@@ -42,8 +43,8 @@ export const useSudojoBoards = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Board[]>> => {
-    return client.getBoards(queryParams);
-  }, [client, queryParams]);
+    return client.getBoards(auth, queryParams);
+  }, [client, auth, queryParams]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.boards({
@@ -51,6 +52,7 @@ export const useSudojoBoards = (
     }),
     queryFn,
     staleTime: STALE_TIMES.BOARDS,
+    enabled: !!auth?.accessToken,
     ...options,
   });
 };
@@ -61,6 +63,7 @@ export const useSudojoBoards = (
 export const useSudojoRandomBoard = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   queryParams?: BoardQueryParams,
   options?: Omit<UseQueryOptions<BaseResponse<Board>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Board>> => {
@@ -70,8 +73,8 @@ export const useSudojoRandomBoard = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Board>> => {
-    return client.getRandomBoard(queryParams);
-  }, [client, queryParams]);
+    return client.getRandomBoard(auth, queryParams);
+  }, [client, auth, queryParams]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.boardRandom({
@@ -79,6 +82,7 @@ export const useSudojoRandomBoard = (
     }),
     queryFn,
     staleTime: 0, // Always fetch fresh for random
+    enabled: !!auth?.accessToken,
     ...options,
   });
 };
@@ -89,6 +93,7 @@ export const useSudojoRandomBoard = (
 export const useSudojoBoard = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   uuid: string,
   options?: Omit<UseQueryOptions<BaseResponse<Board>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Board>> => {
@@ -98,14 +103,14 @@ export const useSudojoBoard = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Board>> => {
-    return client.getBoard(uuid);
-  }, [client, uuid]);
+    return client.getBoard(auth, uuid);
+  }, [client, auth, uuid]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.board(uuid),
     queryFn,
     staleTime: STALE_TIMES.BOARDS,
-    enabled: !!uuid,
+    enabled: !!uuid && !!auth?.accessToken,
     ...options,
   });
 };

@@ -30,6 +30,7 @@ import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 export const useSudojoChallenges = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   queryParams?: ChallengeQueryParams,
   options?: Omit<
     UseQueryOptions<BaseResponse<Challenge[]>>,
@@ -42,8 +43,8 @@ export const useSudojoChallenges = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Challenge[]>> => {
-    return client.getChallenges(queryParams);
-  }, [client, queryParams]);
+    return client.getChallenges(auth, queryParams);
+  }, [client, auth, queryParams]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.challenges({
@@ -52,6 +53,7 @@ export const useSudojoChallenges = (
     }),
     queryFn,
     staleTime: STALE_TIMES.CHALLENGES,
+    enabled: !!auth?.accessToken,
     ...options,
   });
 };
@@ -62,6 +64,7 @@ export const useSudojoChallenges = (
 export const useSudojoRandomChallenge = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   queryParams?: ChallengeQueryParams,
   options?: Omit<
     UseQueryOptions<BaseResponse<Challenge>>,
@@ -74,8 +77,8 @@ export const useSudojoRandomChallenge = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Challenge>> => {
-    return client.getRandomChallenge(queryParams);
-  }, [client, queryParams]);
+    return client.getRandomChallenge(auth, queryParams);
+  }, [client, auth, queryParams]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.challengeRandom({
@@ -84,6 +87,7 @@ export const useSudojoRandomChallenge = (
     }),
     queryFn,
     staleTime: 0, // Always fetch fresh for random
+    enabled: !!auth?.accessToken,
     ...options,
   });
 };
@@ -94,6 +98,7 @@ export const useSudojoRandomChallenge = (
 export const useSudojoChallenge = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   uuid: string,
   options?: Omit<
     UseQueryOptions<BaseResponse<Challenge>>,
@@ -106,14 +111,14 @@ export const useSudojoChallenge = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Challenge>> => {
-    return client.getChallenge(uuid);
-  }, [client, uuid]);
+    return client.getChallenge(auth, uuid);
+  }, [client, auth, uuid]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.challenge(uuid),
     queryFn,
     staleTime: STALE_TIMES.CHALLENGES,
-    enabled: !!uuid,
+    enabled: !!uuid && !!auth?.accessToken,
     ...options,
   });
 };

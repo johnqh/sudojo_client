@@ -30,6 +30,7 @@ import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 export const useSudojoLearning = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   queryParams?: LearningQueryParams,
   options?: Omit<
     UseQueryOptions<BaseResponse<Learning[]>>,
@@ -42,8 +43,8 @@ export const useSudojoLearning = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Learning[]>> => {
-    return client.getLearning(queryParams);
-  }, [client, queryParams]);
+    return client.getLearning(auth, queryParams);
+  }, [client, auth, queryParams]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.learning({
@@ -52,6 +53,7 @@ export const useSudojoLearning = (
     }),
     queryFn,
     staleTime: STALE_TIMES.LEARNING,
+    enabled: !!auth?.accessToken,
     ...options,
   });
 };
@@ -62,6 +64,7 @@ export const useSudojoLearning = (
 export const useSudojoLearningItem = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   uuid: string,
   options?: Omit<
     UseQueryOptions<BaseResponse<Learning>>,
@@ -74,14 +77,14 @@ export const useSudojoLearningItem = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Learning>> => {
-    return client.getLearningItem(uuid);
-  }, [client, uuid]);
+    return client.getLearningItem(auth, uuid);
+  }, [client, auth, uuid]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.learningItem(uuid),
     queryFn,
     staleTime: STALE_TIMES.LEARNING,
-    enabled: !!uuid,
+    enabled: !!uuid && !!auth?.accessToken,
     ...options,
   });
 };

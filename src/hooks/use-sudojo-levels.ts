@@ -29,6 +29,7 @@ import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 export const useSudojoLevels = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   options?: Omit<
     UseQueryOptions<BaseResponse<Level[]>>,
     "queryKey" | "queryFn"
@@ -40,13 +41,14 @@ export const useSudojoLevels = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Level[]>> => {
-    return client.getLevels();
-  }, [client]);
+    return client.getLevels(auth);
+  }, [client, auth]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.levels(),
     queryFn,
     staleTime: STALE_TIMES.LEVELS,
+    enabled: !!auth?.accessToken,
     ...options,
   });
 };
@@ -57,6 +59,7 @@ export const useSudojoLevels = (
 export const useSudojoLevel = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   uuid: string,
   options?: Omit<UseQueryOptions<BaseResponse<Level>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Level>> => {
@@ -66,14 +69,14 @@ export const useSudojoLevel = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Level>> => {
-    return client.getLevel(uuid);
-  }, [client, uuid]);
+    return client.getLevel(auth, uuid);
+  }, [client, auth, uuid]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.level(uuid),
     queryFn,
     staleTime: STALE_TIMES.LEVELS,
-    enabled: !!uuid,
+    enabled: !!uuid && !!auth?.accessToken,
     ...options,
   });
 };

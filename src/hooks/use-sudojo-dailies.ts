@@ -29,6 +29,7 @@ import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 export const useSudojoDailies = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   options?: Omit<
     UseQueryOptions<BaseResponse<Daily[]>>,
     "queryKey" | "queryFn"
@@ -40,13 +41,14 @@ export const useSudojoDailies = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily[]>> => {
-    return client.getDailies();
-  }, [client]);
+    return client.getDailies(auth);
+  }, [client, auth]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailies(),
     queryFn,
     staleTime: STALE_TIMES.DAILIES,
+    enabled: !!auth?.accessToken,
     ...options,
   });
 };
@@ -57,6 +59,7 @@ export const useSudojoDailies = (
 export const useSudojoRandomDaily = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   options?: Omit<UseQueryOptions<BaseResponse<Daily>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Daily>> => {
   const client = useMemo(
@@ -65,13 +68,14 @@ export const useSudojoRandomDaily = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getRandomDaily();
-  }, [client]);
+    return client.getRandomDaily(auth);
+  }, [client, auth]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyRandom(),
     queryFn,
     staleTime: 0, // Always fetch fresh for random
+    enabled: !!auth?.accessToken,
     ...options,
   });
 };
@@ -82,6 +86,7 @@ export const useSudojoRandomDaily = (
 export const useSudojoTodayDaily = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   options?: Omit<UseQueryOptions<BaseResponse<Daily>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Daily>> => {
   const client = useMemo(
@@ -90,13 +95,14 @@ export const useSudojoTodayDaily = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getTodayDaily();
-  }, [client]);
+    return client.getTodayDaily(auth);
+  }, [client, auth]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyToday(),
     queryFn,
     staleTime: STALE_TIMES.DAILIES,
+    enabled: !!auth?.accessToken,
     ...options,
   });
 };
@@ -107,6 +113,7 @@ export const useSudojoTodayDaily = (
 export const useSudojoDailyByDate = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   date: string,
   options?: Omit<UseQueryOptions<BaseResponse<Daily>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Daily>> => {
@@ -116,14 +123,14 @@ export const useSudojoDailyByDate = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getDailyByDate(date);
-  }, [client, date]);
+    return client.getDailyByDate(auth, date);
+  }, [client, auth, date]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyByDate(date),
     queryFn,
     staleTime: STALE_TIMES.DAILIES,
-    enabled: !!date,
+    enabled: !!date && !!auth?.accessToken,
     ...options,
   });
 };
@@ -134,6 +141,7 @@ export const useSudojoDailyByDate = (
 export const useSudojoDaily = (
   networkClient: NetworkClient,
   config: SudojoConfig,
+  auth: SudojoAuth,
   uuid: string,
   options?: Omit<UseQueryOptions<BaseResponse<Daily>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Daily>> => {
@@ -143,14 +151,14 @@ export const useSudojoDaily = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getDaily(uuid);
-  }, [client, uuid]);
+    return client.getDaily(auth, uuid);
+  }, [client, auth, uuid]);
 
   return useQuery({
     queryKey: queryKeys.sudojo.daily(uuid),
     queryFn,
     staleTime: STALE_TIMES.DAILIES,
-    enabled: !!uuid,
+    enabled: !!uuid && !!auth?.accessToken,
     ...options,
   });
 };

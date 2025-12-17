@@ -221,14 +221,17 @@ export class SudojoClient {
   // Levels
   // ===========================================================================
 
-  async getLevels(): Promise<BaseResponse<Level[]>> {
-    return this.request<BaseResponse<Level[]>>(this.config.ENDPOINTS.LEVELS);
+  async getLevels(auth: SudojoAuth): Promise<BaseResponse<Level[]>> {
+    return this.request<BaseResponse<Level[]>>(this.config.ENDPOINTS.LEVELS, {
+      auth,
+    });
   }
 
-  async getLevel(uuid: string): Promise<BaseResponse<Level>> {
+  async getLevel(auth: SudojoAuth, uuid: string): Promise<BaseResponse<Level>> {
     const validatedUuid = validateUUID(uuid, "Level UUID");
     return this.request<BaseResponse<Level>>(
       this.config.ENDPOINTS.LEVEL(validatedUuid),
+      { auth },
     );
   }
 
@@ -278,6 +281,7 @@ export class SudojoClient {
   // ===========================================================================
 
   async getTechniques(
+    auth: SudojoAuth,
     queryParams?: TechniqueQueryParams,
   ): Promise<BaseResponse<Technique[]>> {
     const params = createURLSearchParams();
@@ -289,13 +293,17 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.TECHNIQUES}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Technique[]>>(endpoint);
+    return this.request<BaseResponse<Technique[]>>(endpoint, { auth });
   }
 
-  async getTechnique(uuid: string): Promise<BaseResponse<Technique>> {
+  async getTechnique(
+    auth: SudojoAuth,
+    uuid: string,
+  ): Promise<BaseResponse<Technique>> {
     const validatedUuid = validateUUID(uuid, "Technique UUID");
     return this.request<BaseResponse<Technique>>(
       this.config.ENDPOINTS.TECHNIQUE(validatedUuid),
+      { auth },
     );
   }
 
@@ -348,6 +356,7 @@ export class SudojoClient {
   // ===========================================================================
 
   async getLearning(
+    auth: SudojoAuth,
     queryParams?: LearningQueryParams,
   ): Promise<BaseResponse<Learning[]>> {
     const params = createURLSearchParams();
@@ -362,13 +371,17 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.LEARNING}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Learning[]>>(endpoint);
+    return this.request<BaseResponse<Learning[]>>(endpoint, { auth });
   }
 
-  async getLearningItem(uuid: string): Promise<BaseResponse<Learning>> {
+  async getLearningItem(
+    auth: SudojoAuth,
+    uuid: string,
+  ): Promise<BaseResponse<Learning>> {
     const validatedUuid = validateUUID(uuid, "Learning UUID");
     return this.request<BaseResponse<Learning>>(
       this.config.ENDPOINTS.LEARNING_ITEM(validatedUuid),
+      { auth },
     );
   }
 
@@ -421,6 +434,7 @@ export class SudojoClient {
   // ===========================================================================
 
   async getBoards(
+    auth: SudojoAuth,
     queryParams?: BoardQueryParams,
   ): Promise<BaseResponse<Board[]>> {
     const params = createURLSearchParams();
@@ -432,10 +446,11 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.BOARDS}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Board[]>>(endpoint);
+    return this.request<BaseResponse<Board[]>>(endpoint, { auth });
   }
 
   async getRandomBoard(
+    auth: SudojoAuth,
     queryParams?: BoardQueryParams,
   ): Promise<BaseResponse<Board>> {
     const params = createURLSearchParams();
@@ -447,13 +462,14 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.BOARDS_RANDOM}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Board>>(endpoint);
+    return this.request<BaseResponse<Board>>(endpoint, { auth });
   }
 
-  async getBoard(uuid: string): Promise<BaseResponse<Board>> {
+  async getBoard(auth: SudojoAuth, uuid: string): Promise<BaseResponse<Board>> {
     const validatedUuid = validateUUID(uuid, "Board UUID");
     return this.request<BaseResponse<Board>>(
       this.config.ENDPOINTS.BOARD(validatedUuid),
+      { auth },
     );
   }
 
@@ -502,23 +518,30 @@ export class SudojoClient {
   // Dailies
   // ===========================================================================
 
-  async getDailies(): Promise<BaseResponse<Daily[]>> {
-    return this.request<BaseResponse<Daily[]>>(this.config.ENDPOINTS.DAILIES);
+  async getDailies(auth: SudojoAuth): Promise<BaseResponse<Daily[]>> {
+    return this.request<BaseResponse<Daily[]>>(this.config.ENDPOINTS.DAILIES, {
+      auth,
+    });
   }
 
-  async getRandomDaily(): Promise<BaseResponse<Daily>> {
+  async getRandomDaily(auth: SudojoAuth): Promise<BaseResponse<Daily>> {
     return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILIES_RANDOM,
+      { auth },
     );
   }
 
-  async getTodayDaily(): Promise<BaseResponse<Daily>> {
+  async getTodayDaily(auth: SudojoAuth): Promise<BaseResponse<Daily>> {
     return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILIES_TODAY,
+      { auth },
     );
   }
 
-  async getDailyByDate(date: string): Promise<BaseResponse<Daily>> {
+  async getDailyByDate(
+    auth: SudojoAuth,
+    date: string,
+  ): Promise<BaseResponse<Daily>> {
     // Validate date format (YYYY-MM-DD)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       throw new Error(
@@ -527,13 +550,15 @@ export class SudojoClient {
     }
     return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILIES_DATE(date),
+      { auth },
     );
   }
 
-  async getDaily(uuid: string): Promise<BaseResponse<Daily>> {
+  async getDaily(auth: SudojoAuth, uuid: string): Promise<BaseResponse<Daily>> {
     const validatedUuid = validateUUID(uuid, "Daily UUID");
     return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILY(validatedUuid),
+      { auth },
     );
   }
 
@@ -583,6 +608,7 @@ export class SudojoClient {
   // ===========================================================================
 
   async getChallenges(
+    auth: SudojoAuth,
     queryParams?: ChallengeQueryParams,
   ): Promise<BaseResponse<Challenge[]>> {
     const params = createURLSearchParams();
@@ -597,10 +623,11 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.CHALLENGES}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Challenge[]>>(endpoint);
+    return this.request<BaseResponse<Challenge[]>>(endpoint, { auth });
   }
 
   async getRandomChallenge(
+    auth: SudojoAuth,
     queryParams?: ChallengeQueryParams,
   ): Promise<BaseResponse<Challenge>> {
     const params = createURLSearchParams();
@@ -615,13 +642,17 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.CHALLENGES_RANDOM}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Challenge>>(endpoint);
+    return this.request<BaseResponse<Challenge>>(endpoint, { auth });
   }
 
-  async getChallenge(uuid: string): Promise<BaseResponse<Challenge>> {
+  async getChallenge(
+    auth: SudojoAuth,
+    uuid: string,
+  ): Promise<BaseResponse<Challenge>> {
     const validatedUuid = validateUUID(uuid, "Challenge UUID");
     return this.request<BaseResponse<Challenge>>(
       this.config.ENDPOINTS.CHALLENGE(validatedUuid),
+      { auth },
     );
   }
 
