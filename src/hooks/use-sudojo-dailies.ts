@@ -40,16 +40,21 @@ export const useSudojoDailies = (
     [networkClient, config],
   );
 
+  const accessToken = auth?.accessToken;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily[]>> => {
-    return client.getDailies(auth);
-  }, [client, auth]);
+    return client.getDailies({ accessToken: accessToken ?? "" });
+  }, [client, accessToken]);
+
+  const isEnabled =
+    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailies(),
     queryFn,
     staleTime: STALE_TIMES.DAILIES,
-    enabled: !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -67,16 +72,21 @@ export const useSudojoRandomDaily = (
     [networkClient, config],
   );
 
+  const accessToken = auth?.accessToken;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getRandomDaily(auth);
-  }, [client, auth]);
+    return client.getRandomDaily({ accessToken: accessToken ?? "" });
+  }, [client, accessToken]);
+
+  const isEnabled =
+    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyRandom(),
     queryFn,
     staleTime: 0, // Always fetch fresh for random
-    enabled: !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -94,16 +104,21 @@ export const useSudojoTodayDaily = (
     [networkClient, config],
   );
 
+  const accessToken = auth?.accessToken;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getTodayDaily(auth);
-  }, [client, auth]);
+    return client.getTodayDaily({ accessToken: accessToken ?? "" });
+  }, [client, accessToken]);
+
+  const isEnabled =
+    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyToday(),
     queryFn,
     staleTime: STALE_TIMES.DAILIES,
-    enabled: !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -122,16 +137,23 @@ export const useSudojoDailyByDate = (
     [networkClient, config],
   );
 
+  const accessToken = auth?.accessToken;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getDailyByDate(auth, date);
-  }, [client, auth, date]);
+    return client.getDailyByDate({ accessToken: accessToken ?? "" }, date);
+  }, [client, accessToken, date]);
+
+  const isEnabled =
+    !!date &&
+    !!accessToken &&
+    (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyByDate(date),
     queryFn,
     staleTime: STALE_TIMES.DAILIES,
-    enabled: !!date && !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -150,16 +172,23 @@ export const useSudojoDaily = (
     [networkClient, config],
   );
 
+  const accessToken = auth?.accessToken;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getDaily(auth, uuid);
-  }, [client, auth, uuid]);
+    return client.getDaily({ accessToken: accessToken ?? "" }, uuid);
+  }, [client, accessToken, uuid]);
+
+  const isEnabled =
+    !!uuid &&
+    !!accessToken &&
+    (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.daily(uuid),
     queryFn,
     staleTime: STALE_TIMES.DAILIES,
-    enabled: !!uuid && !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 

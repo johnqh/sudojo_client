@@ -42,18 +42,29 @@ export const useSudojoBoards = (
     [networkClient, config],
   );
 
+  // Extract values for stable dependencies
+  const levelUuid = queryParams?.level_uuid;
+  const accessToken = auth?.accessToken;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Board[]>> => {
-    return client.getBoards(auth, queryParams);
-  }, [client, auth, queryParams]);
+    return client.getBoards(
+      { accessToken: accessToken ?? "" },
+      levelUuid ? { level_uuid: levelUuid } : undefined,
+    );
+  }, [client, accessToken, levelUuid]);
+
+  // Combine auth check with caller's enabled option
+  const isEnabled =
+    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.boards({
-      level_uuid: queryParams?.level_uuid ?? undefined,
+      level_uuid: levelUuid ?? undefined,
     }),
     queryFn,
     staleTime: STALE_TIMES.BOARDS,
-    enabled: !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -72,18 +83,29 @@ export const useSudojoRandomBoard = (
     [networkClient, config],
   );
 
+  // Extract values for stable dependencies
+  const levelUuid = queryParams?.level_uuid;
+  const accessToken = auth?.accessToken;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Board>> => {
-    return client.getRandomBoard(auth, queryParams);
-  }, [client, auth, queryParams]);
+    return client.getRandomBoard(
+      { accessToken: accessToken ?? "" },
+      levelUuid ? { level_uuid: levelUuid } : undefined,
+    );
+  }, [client, accessToken, levelUuid]);
+
+  // Combine auth check with caller's enabled option
+  const isEnabled =
+    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.boardRandom({
-      level_uuid: queryParams?.level_uuid ?? undefined,
+      level_uuid: levelUuid ?? undefined,
     }),
     queryFn,
     staleTime: 0, // Always fetch fresh for random
-    enabled: !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -102,16 +124,24 @@ export const useSudojoBoard = (
     [networkClient, config],
   );
 
+  const accessToken = auth?.accessToken;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Board>> => {
-    return client.getBoard(auth, uuid);
-  }, [client, auth, uuid]);
+    return client.getBoard({ accessToken: accessToken ?? "" }, uuid);
+  }, [client, accessToken, uuid]);
+
+  // Combine auth check with caller's enabled option
+  const isEnabled =
+    !!uuid &&
+    !!accessToken &&
+    (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.board(uuid),
     queryFn,
     staleTime: STALE_TIMES.BOARDS,
-    enabled: !!uuid && !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 

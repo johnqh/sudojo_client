@@ -40,16 +40,22 @@ export const useSudojoLevels = (
     [networkClient, config],
   );
 
+  const accessToken = auth?.accessToken;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Level[]>> => {
-    return client.getLevels(auth);
-  }, [client, auth]);
+    return client.getLevels({ accessToken: accessToken ?? "" });
+  }, [client, accessToken]);
+
+  // Combine auth check with caller's enabled option
+  const isEnabled =
+    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.levels(),
     queryFn,
     staleTime: STALE_TIMES.LEVELS,
-    enabled: !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -68,16 +74,24 @@ export const useSudojoLevel = (
     [networkClient, config],
   );
 
+  const accessToken = auth?.accessToken;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Level>> => {
-    return client.getLevel(auth, uuid);
-  }, [client, auth, uuid]);
+    return client.getLevel({ accessToken: accessToken ?? "" }, uuid);
+  }, [client, accessToken, uuid]);
+
+  // Combine auth check with caller's enabled option
+  const isEnabled =
+    !!uuid &&
+    !!accessToken &&
+    (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.level(uuid),
     queryFn,
     staleTime: STALE_TIMES.LEVELS,
-    enabled: !!uuid && !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
