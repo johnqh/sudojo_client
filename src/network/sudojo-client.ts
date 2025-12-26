@@ -12,6 +12,7 @@ import type {
   Daily,
   DailyCreateRequest,
   DailyUpdateRequest,
+  GenerateData,
   HealthCheckData,
   Learning,
   LearningCreateRequest,
@@ -21,11 +22,13 @@ import type {
   LevelCreateRequest,
   LevelUpdateRequest,
   Optional,
+  SolveData,
   SubscriptionResult,
   Technique,
   TechniqueCreateRequest,
   TechniqueQueryParams,
   TechniqueUpdateRequest,
+  ValidateData,
 } from "@sudobility/sudojo_types";
 
 // =============================================================================
@@ -39,6 +42,42 @@ export interface SudojoConfig {
 
 export interface SudojoAuth {
   accessToken: string;
+}
+
+// =============================================================================
+// Solver Option Types
+// =============================================================================
+
+/**
+ * Options for the solve API call
+ */
+export interface SolveOptions {
+  /** 81-character puzzle string */
+  original: string;
+  /** 81-character user input string */
+  user: string;
+  /** Whether auto-pencilmarks are enabled */
+  autoPencilmarks?: boolean;
+  /** Comma-separated pencilmarks string */
+  pencilmarks?: string;
+  /** Optional technique filters */
+  filters?: string;
+}
+
+/**
+ * Options for the validate API call
+ */
+export interface ValidateOptions {
+  /** 81-character puzzle string */
+  original: string;
+}
+
+/**
+ * Options for the generate API call
+ */
+export interface GenerateOptions {
+  /** Whether to generate a symmetrical puzzle */
+  symmetrical?: boolean;
 }
 
 // =============================================================================
@@ -132,6 +171,11 @@ const createApiConfig = (config: SudojoConfig) => ({
     // Users
     USER_SUBSCRIPTIONS: (userId: string) =>
       `/api/v1/users/${userId}/subscriptions`,
+
+    // Solver
+    SOLVER_SOLVE: "/api/v1/solver/solve",
+    SOLVER_VALIDATE: "/api/v1/solver/validate",
+    SOLVER_GENERATE: "/api/v1/solver/generate",
   },
   DEFAULT_HEADERS: {
     "Content-Type": "application/json",
@@ -717,6 +761,76 @@ export class SudojoClient {
         auth,
       },
     );
+  }
+
+  // ===========================================================================
+  // Solver
+  // ===========================================================================
+
+  /**
+   * Builds a URL with query parameters for solver endpoints
+   */
+  private buildSolverUrl(
+    endpoint: string,
+    params: Record<string, string | boolean | undefined>,
+  ): string {
+    const searchParams = createURLSearchParams();
+    // Sort keys alphabetically to match Kotlin behavior
+    const sortedKeys = Object.keys(params).sort();
+    for (const key of sortedKeys) {
+      const value = params[key];
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    }
+    const query = searchParams.toString();
+    return `${this.baseUrl}${endpoint}${query ? `?${query}` : ""}`;
+  }
+
+  /**
+   * Get hints for solving a Sudoku puzzle
+   */
+  async solverSolve(
+    auth: SudojoAuth,
+    options: SolveOptions,
+  ): Promise<BaseResponse<SolveData>> {
+    const url = this.buildSolverUrl(this.config.ENDPOINTS.SOLVER_SOLVE, {
+      original: options.original,
+      user: options.user,
+      autopencilmarks: options.autoPencilmarks,
+      pencilmarks: options.pencilmarks,
+      filters: options.filters,
+    });
+
+    return this.request<BaseResponse<SolveData>>(url, { auth });
+  }
+
+  /**
+   * Validate that a Sudoku puzzle has a unique solution
+   */
+  async solverValidate(
+    auth: SudojoAuth,
+    options: ValidateOptions,
+  ): Promise<BaseResponse<ValidateData>> {
+    const url = this.buildSolverUrl(this.config.ENDPOINTS.SOLVER_VALIDATE, {
+      original: options.original,
+    });
+
+    return this.request<BaseResponse<ValidateData>>(url, { auth });
+  }
+
+  /**
+   * Generate a new random Sudoku puzzle
+   */
+  async solverGenerate(
+    auth: SudojoAuth,
+    options: GenerateOptions = {},
+  ): Promise<BaseResponse<GenerateData>> {
+    const url = this.buildSolverUrl(this.config.ENDPOINTS.SOLVER_GENERATE, {
+      symmetrical: options.symmetrical,
+    });
+
+    return this.request<BaseResponse<GenerateData>>(url, { auth });
   }
 }
 

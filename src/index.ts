@@ -5,7 +5,13 @@ export {
   SudojoClient,
   validateUUID,
 } from "./network";
-export type { SudojoAuth, SudojoConfig } from "./network";
+export type {
+  GenerateOptions,
+  SolveOptions,
+  SudojoAuth,
+  SudojoConfig,
+  ValidateOptions,
+} from "./network";
 
 // React hooks
 export {
@@ -76,6 +82,7 @@ export type {
   Daily,
   DailyCreateRequest,
   DailyUpdateRequest,
+  GenerateData,
   HealthCheckData,
   Learning,
   LearningCreateRequest,
@@ -89,50 +96,29 @@ export type {
   PaginationInfo,
   PaginationOptions,
   RevenueCatEntitlement,
+  SolveData,
+  SolverAreaType,
+  SolverBoard,
+  SolverCellActions,
+  SolverColor,
+  SolverHintArea,
+  SolverHintCell,
+  SolverHintStep,
+  SolverPencilmarks,
   SubscriptionResult,
   Technique,
   TechniqueCreateRequest,
   TechniqueQueryParams,
   TechniqueUpdateRequest,
+  ValidateData,
 } from "@sudobility/sudojo_types";
 
-// Solver API
+// Solver hooks
 export {
-  // Client
-  createSudojoSolverClient,
-  SudojoApiError,
-  SudojoSolverClient,
-  // Hooks
   getSolverServiceKeys,
   solverQueryKeys,
   SOLVER_STALE_TIMES,
   useSolverGenerate,
   useSolverSolve,
   useSolverValidate,
-} from "./solver";
-
-// Solver types (re-exported from @sudobility/sudojo_types)
-export type {
-  SolverPencilmarks,
-  SolverBoard,
-  SolverAreaType,
-  SolverColor,
-  SolverHintArea,
-  SolverCellActions,
-  SolverHintCell,
-  SolverHintStep,
-  SolveData,
-  ValidateData,
-  GenerateData,
-} from "./solver";
-
-// Solver client-specific types
-export type {
-  SolveOptions,
-  ValidateOptions,
-  GenerateOptions,
-  ClientConfig,
-  SolveResponse,
-  ValidateResponse,
-  GenerateResponse,
 } from "./solver";

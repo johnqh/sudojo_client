@@ -4,4 +4,10 @@ export {
   SudojoClient,
   validateUUID,
 } from "./sudojo-client";
-export type { SudojoAuth, SudojoConfig } from "./sudojo-client";
+export type {
+  GenerateOptions,
+  SolveOptions,
+  SudojoAuth,
+  SudojoConfig,
+  ValidateOptions,
+} from "./sudojo-client";

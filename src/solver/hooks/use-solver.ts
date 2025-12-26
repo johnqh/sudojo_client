@@ -9,19 +9,22 @@ import {
   UseQueryResult,
 } from "@tanstack/react-query";
 import type { NetworkClient } from "@sudobility/types";
-import type { SudojoAuth } from "../../network/sudojo-client";
+import type {
+  BaseResponse,
+  GenerateData,
+  SolveData,
+  ValidateData,
+} from "@sudobility/sudojo_types";
 import { solverQueryKeys } from "./query-keys";
 import { SOLVER_STALE_TIMES } from "./query-config";
-import { SudojoSolverClient } from "../sudojo-solver-client";
+import { SudojoClient } from "../../network/sudojo-client";
 import type {
-  ClientConfig,
   GenerateOptions,
-  GenerateResponse,
   SolveOptions,
-  SolveResponse,
+  SudojoAuth,
+  SudojoConfig,
   ValidateOptions,
-  ValidateResponse,
-} from "../types";
+} from "../../network/sudojo-client";
 
 // =============================================================================
 // Solve Hook
@@ -31,40 +34,35 @@ import type {
  * Hook to get solving hints for a Sudoku puzzle
  *
  * @param networkClient - Network client for API calls
- * @param config - Solver configuration
- * @param auth - Authentication with Firebase access token (required for /solve endpoint)
+ * @param config - Client configuration
+ * @param auth - Authentication with Firebase access token
  * @param options - Solve options (original puzzle, user input, etc.)
  * @param queryOptions - React Query options
- *
- * @example
- * ```typescript
- * const { data, isLoading, error } = useSolverSolve(
- *   networkClient,
- *   { baseUrl: 'http://localhost:5000' },
- *   { accessToken: 'firebase-token' },
- *   {
- *     original: '040002008...',
- *     user: '000000000...',
- *     autoPencilmarks: true,
- *   }
- * );
- * ```
  */
 export const useSolverSolve = (
   networkClient: NetworkClient,
-  config: ClientConfig,
+  config: SudojoConfig,
   auth: SudojoAuth,
   options: SolveOptions,
-  queryOptions?: Omit<UseQueryOptions<SolveResponse>, "queryKey" | "queryFn">,
-): UseQueryResult<SolveResponse> => {
+  queryOptions?: Omit<
+    UseQueryOptions<BaseResponse<SolveData>>,
+    "queryKey" | "queryFn"
+  >,
+): UseQueryResult<BaseResponse<SolveData>> => {
   const client = useMemo(
-    () => new SudojoSolverClient(networkClient, config),
+    () => new SudojoClient(networkClient, config),
     [networkClient, config],
   );
 
-  const queryFn = useCallback(async (): Promise<SolveResponse> => {
-    return client.solve(options, auth);
-  }, [client, options, auth]);
+  const accessToken = auth?.accessToken;
+
+  const queryFn = useCallback(async (): Promise<BaseResponse<SolveData>> => {
+    return client.solverSolve({ accessToken: accessToken ?? "" }, options);
+  }, [client, accessToken, options]);
+
+  const isEnabled =
+    !!accessToken &&
+    (queryOptions?.enabled !== undefined ? queryOptions.enabled : true);
 
   return useQuery({
     queryKey: solverQueryKeys.solve({
@@ -76,8 +74,8 @@ export const useSolverSolve = (
     }),
     queryFn,
     staleTime: SOLVER_STALE_TIMES.SOLVE,
-    enabled: !!auth?.accessToken,
     ...queryOptions,
+    enabled: isEnabled,
   });
 };
 
@@ -89,46 +87,42 @@ export const useSolverSolve = (
  * Hook to validate a Sudoku puzzle has a unique solution
  *
  * @param networkClient - Network client for API calls
- * @param config - Solver configuration
+ * @param config - Client configuration
+ * @param auth - Authentication with Firebase access token
  * @param options - Validate options (original puzzle)
  * @param queryOptions - React Query options
- *
- * @example
- * ```typescript
- * const { data, isLoading, error } = useSolverValidate(
- *   networkClient,
- *   { baseUrl: 'http://localhost:5000' },
- *   { original: '040002008...' }
- * );
- *
- * if (data?.success) {
- *   console.log('Solution:', data.data?.board.board.solution);
- * }
- * ```
  */
 export const useSolverValidate = (
   networkClient: NetworkClient,
-  config: ClientConfig,
+  config: SudojoConfig,
+  auth: SudojoAuth,
   options: ValidateOptions,
   queryOptions?: Omit<
-    UseQueryOptions<ValidateResponse>,
+    UseQueryOptions<BaseResponse<ValidateData>>,
     "queryKey" | "queryFn"
   >,
-): UseQueryResult<ValidateResponse> => {
+): UseQueryResult<BaseResponse<ValidateData>> => {
   const client = useMemo(
-    () => new SudojoSolverClient(networkClient, config),
+    () => new SudojoClient(networkClient, config),
     [networkClient, config],
   );
 
-  const queryFn = useCallback(async (): Promise<ValidateResponse> => {
-    return client.validate(options);
-  }, [client, options]);
+  const accessToken = auth?.accessToken;
+
+  const queryFn = useCallback(async (): Promise<BaseResponse<ValidateData>> => {
+    return client.solverValidate({ accessToken: accessToken ?? "" }, options);
+  }, [client, accessToken, options]);
+
+  const isEnabled =
+    !!accessToken &&
+    (queryOptions?.enabled !== undefined ? queryOptions.enabled : true);
 
   return useQuery({
     queryKey: solverQueryKeys.validate(options.original),
     queryFn,
     staleTime: SOLVER_STALE_TIMES.VALIDATE,
     ...queryOptions,
+    enabled: isEnabled,
   });
 };
 
@@ -140,44 +134,41 @@ export const useSolverValidate = (
  * Hook to generate a new random Sudoku puzzle
  *
  * @param networkClient - Network client for API calls
- * @param config - Solver configuration
+ * @param config - Client configuration
+ * @param auth - Authentication with Firebase access token
  * @param options - Generate options (symmetrical, etc.)
  * @param queryOptions - React Query options
- *
- * @example
- * ```typescript
- * const { data, isLoading, refetch } = useSolverGenerate(
- *   networkClient,
- *   { baseUrl: 'http://localhost:5000' },
- *   { symmetrical: true }
- * );
- *
- * // Generate a new puzzle
- * const handleNewPuzzle = () => refetch();
- * ```
  */
 export const useSolverGenerate = (
   networkClient: NetworkClient,
-  config: ClientConfig,
+  config: SudojoConfig,
+  auth: SudojoAuth,
   options: GenerateOptions = {},
   queryOptions?: Omit<
-    UseQueryOptions<GenerateResponse>,
+    UseQueryOptions<BaseResponse<GenerateData>>,
     "queryKey" | "queryFn"
   >,
-): UseQueryResult<GenerateResponse> => {
+): UseQueryResult<BaseResponse<GenerateData>> => {
   const client = useMemo(
-    () => new SudojoSolverClient(networkClient, config),
+    () => new SudojoClient(networkClient, config),
     [networkClient, config],
   );
 
-  const queryFn = useCallback(async (): Promise<GenerateResponse> => {
-    return client.generate(options);
-  }, [client, options]);
+  const accessToken = auth?.accessToken;
+
+  const queryFn = useCallback(async (): Promise<BaseResponse<GenerateData>> => {
+    return client.solverGenerate({ accessToken: accessToken ?? "" }, options);
+  }, [client, accessToken, options]);
+
+  const isEnabled =
+    !!accessToken &&
+    (queryOptions?.enabled !== undefined ? queryOptions.enabled : true);
 
   return useQuery({
     queryKey: solverQueryKeys.generate({ symmetrical: options.symmetrical }),
     queryFn,
     staleTime: SOLVER_STALE_TIMES.GENERATE,
     ...queryOptions,
+    enabled: isEnabled,
   });
 };

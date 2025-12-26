@@ -1,10 +1,3 @@
-// Client
-export {
-  createSudojoSolverClient,
-  SudojoApiError,
-  SudojoSolverClient,
-} from "./sudojo-solver-client";
-
 // Hooks
 export {
   getSolverServiceKeys,
@@ -30,14 +23,3 @@ export type {
   GenerateData,
   BaseResponse,
 } from "@sudobility/sudojo_types";
-
-// Client-specific types
-export type {
-  SolveOptions,
-  ValidateOptions,
-  GenerateOptions,
-  ClientConfig,
-  SolveResponse,
-  ValidateResponse,
-  GenerateResponse,
-} from "./types";
