@@ -36,7 +36,7 @@ export type {
   SolveOptions,
   ValidateOptions,
   GenerateOptions,
-  SolverConfig,
+  ClientConfig,
   SolveResponse,
   ValidateResponse,
   GenerateResponse,

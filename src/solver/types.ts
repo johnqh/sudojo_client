@@ -58,7 +58,7 @@ export interface GenerateOptions {
 /**
  * Client configuration options
  */
-export interface SolverConfig {
+export interface ClientConfig {
   /** Base URL of the API (e.g., "http://localhost:5000") */
   baseUrl: string;
   /** Request timeout in milliseconds */

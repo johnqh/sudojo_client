@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
 import type {
-  SolverHintArea,
+  ClientConfig,
+  GenerateOptions,
   SolverAreaType,
   SolverBoard,
-  SolverHintCell,
   SolverCellActions,
   SolverColor,
-  SolverConfig,
-  GenerateOptions,
+  SolverHintArea,
+  SolverHintCell,
   SolverHintStep,
   SolverPencilmarks,
   SolveOptions,
@@ -225,9 +225,9 @@ describe("Types", () => {
     });
   });
 
-  describe("SolverConfig", () => {
+  describe("ClientConfig", () => {
     it("should require baseUrl", () => {
-      const config: SolverConfig = {
+      const config: ClientConfig = {
         baseUrl: "http://localhost:5000",
       };
 
@@ -235,7 +235,7 @@ describe("Types", () => {
     });
 
     it("should allow optional timeout", () => {
-      const config: SolverConfig = {
+      const config: ClientConfig = {
         baseUrl: "http://localhost:5000",
         timeout: 5000,
       };

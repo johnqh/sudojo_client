@@ -14,10 +14,10 @@ import { solverQueryKeys } from "./query-keys";
 import { SOLVER_STALE_TIMES } from "./query-config";
 import { SudojoSolverClient } from "../sudojo-solver-client";
 import type {
+  ClientConfig,
   GenerateOptions,
   GenerateResponse,
   SolveOptions,
-  SolverConfig,
   SolveResponse,
   ValidateOptions,
   ValidateResponse,
@@ -52,7 +52,7 @@ import type {
  */
 export const useSolverSolve = (
   networkClient: NetworkClient,
-  config: SolverConfig,
+  config: ClientConfig,
   auth: SudojoAuth,
   options: SolveOptions,
   queryOptions?: Omit<UseQueryOptions<SolveResponse>, "queryKey" | "queryFn">,
@@ -108,7 +108,7 @@ export const useSolverSolve = (
  */
 export const useSolverValidate = (
   networkClient: NetworkClient,
-  config: SolverConfig,
+  config: ClientConfig,
   options: ValidateOptions,
   queryOptions?: Omit<
     UseQueryOptions<ValidateResponse>,
@@ -158,7 +158,7 @@ export const useSolverValidate = (
  */
 export const useSolverGenerate = (
   networkClient: NetworkClient,
-  config: SolverConfig,
+  config: ClientConfig,
   options: GenerateOptions = {},
   queryOptions?: Omit<
     UseQueryOptions<GenerateResponse>,

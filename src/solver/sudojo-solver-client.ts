@@ -1,10 +1,10 @@
 import type { NetworkClient } from "@sudobility/types";
 import type { SudojoAuth } from "../network/sudojo-client";
 import type {
+  ClientConfig,
   GenerateOptions,
   GenerateResponse,
   SolveOptions,
-  SolverConfig,
   SolveResponse,
   ValidateOptions,
   ValidateResponse,
@@ -61,7 +61,7 @@ const createURLSearchParams = (): {
 // =============================================================================
 
 const createApiConfig = (
-  config: SolverConfig,
+  config: ClientConfig,
 ): {
   BASE_URL: string;
   ENDPOINTS: {
@@ -129,7 +129,7 @@ export class SudojoSolverClient {
    * @param networkClient - Network client for making HTTP requests
    * @param config - Client configuration
    */
-  constructor(networkClient: NetworkClient, config: SolverConfig) {
+  constructor(networkClient: NetworkClient, config: ClientConfig) {
     this.networkClient = networkClient;
     this.config = createApiConfig(config);
     this.headers = { ...this.config.DEFAULT_HEADERS };
@@ -284,7 +284,7 @@ export class SudojoSolverClient {
  */
 export const createSudojoSolverClient = (
   networkClient: NetworkClient,
-  config: SolverConfig,
+  config: ClientConfig,
 ): SudojoSolverClient => {
   return new SudojoSolverClient(networkClient, config);
 };
