@@ -95,3 +95,44 @@ export type {
   TechniqueQueryParams,
   TechniqueUpdateRequest,
 } from "@sudobility/sudojo_types";
+
+// Solver API
+export {
+  // Client
+  createSudojoSolverClient,
+  SudojoApiError,
+  SudojoSolverClient,
+  // Hooks
+  getSolverServiceKeys,
+  solverQueryKeys,
+  SOLVER_STALE_TIMES,
+  useSolverGenerate,
+  useSolverSolve,
+  useSolverValidate,
+} from "./solver";
+
+// Solver types (re-exported from @sudobility/sudojo_types)
+export type {
+  SolverPencilmarks,
+  SolverBoard,
+  SolverAreaType,
+  SolverColor,
+  SolverHintArea,
+  SolverCellActions,
+  SolverHintCell,
+  SolverHintStep,
+  SolveData,
+  ValidateData,
+  GenerateData,
+} from "./solver";
+
+// Solver client-specific types
+export type {
+  SolveOptions,
+  ValidateOptions,
+  GenerateOptions,
+  SolverConfig,
+  SolveResponse,
+  ValidateResponse,
+  GenerateResponse,
+} from "./solver";
