@@ -98,7 +98,8 @@ const createURLSearchParams = () => {
         .flatMap(([key, values]) =>
           values.map(
             (value) =>
-              `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
+              // Don't encode commas - the solver API expects literal commas in pencilmarks
+              `${encodeURIComponent(key)}=${encodeURIComponent(value).replace(/%2C/g, ",")}`,
           ),
         )
         .join("&");
