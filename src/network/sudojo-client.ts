@@ -769,7 +769,7 @@ export class SudojoClient {
   // ===========================================================================
 
   /**
-   * Builds a URL with query parameters for solver endpoints
+   * Builds an endpoint path with query parameters for solver endpoints
    */
   private buildSolverUrl(
     endpoint: string,
@@ -785,7 +785,8 @@ export class SudojoClient {
       }
     }
     const query = searchParams.toString();
-    return `${this.baseUrl}${endpoint}${query ? `?${query}` : ""}`;
+    // Return endpoint + query only, baseUrl is added by request()
+    return `${endpoint}${query ? `?${query}` : ""}`;
   }
 
   /**
