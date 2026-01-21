@@ -22,15 +22,14 @@ import type {
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
-import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 
 /**
  * Hook to get all boards with optional filtering
  */
 export const useSudojoBoards = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   queryParams?: BoardQueryParams,
   options?: Omit<
     UseQueryOptions<BaseResponse<Board[]>>,
@@ -38,24 +37,23 @@ export const useSudojoBoards = (
   >,
 ): UseQueryResult<BaseResponse<Board[]>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   // Extract values for stable dependencies
   const levelUuid = queryParams?.level_uuid;
-  const accessToken = auth?.accessToken;
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Board[]>> => {
     return client.getBoards(
-      { accessToken: accessToken ?? "" },
+      token,
       levelUuid ? { level_uuid: levelUuid } : undefined,
     );
-  }, [client, accessToken, levelUuid]);
+  }, [client, token, levelUuid]);
 
   // Combine auth check with caller's enabled option
   const isEnabled =
-    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
+    !!token && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.boards({
@@ -73,30 +71,29 @@ export const useSudojoBoards = (
  */
 export const useSudojoRandomBoard = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   queryParams?: BoardQueryParams,
   options?: Omit<UseQueryOptions<BaseResponse<Board>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Board>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   // Extract values for stable dependencies
   const levelUuid = queryParams?.level_uuid;
-  const accessToken = auth?.accessToken;
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Board>> => {
     return client.getRandomBoard(
-      { accessToken: accessToken ?? "" },
+      token,
       levelUuid ? { level_uuid: levelUuid } : undefined,
     );
-  }, [client, accessToken, levelUuid]);
+  }, [client, token, levelUuid]);
 
   // Combine auth check with caller's enabled option
   const isEnabled =
-    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
+    !!token && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.boardRandom({
@@ -114,26 +111,24 @@ export const useSudojoRandomBoard = (
  */
 export const useSudojoBoard = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   uuid: string,
   options?: Omit<UseQueryOptions<BaseResponse<Board>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Board>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
-  const accessToken = auth?.accessToken;
-
   const queryFn = useCallback(async (): Promise<BaseResponse<Board>> => {
-    return client.getBoard({ accessToken: accessToken ?? "" }, uuid);
-  }, [client, accessToken, uuid]);
+    return client.getBoard(token, uuid);
+  }, [client, token, uuid]);
 
   // Combine auth check with caller's enabled option
   const isEnabled =
     !!uuid &&
-    !!accessToken &&
+    !!token &&
     (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
@@ -150,27 +145,27 @@ export const useSudojoBoard = (
  */
 export const useSudojoCreateBoard = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Board>,
   Error,
-  { auth: SudojoAuth; data: BoardCreateRequest }
+  { token: string; data: BoardCreateRequest }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      auth,
+      token,
       data,
     }: {
-      auth: SudojoAuth;
+      token: string;
       data: BoardCreateRequest;
     }) => {
-      return client.createBoard(auth, data);
+      return client.createBoard(token, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -185,29 +180,29 @@ export const useSudojoCreateBoard = (
  */
 export const useSudojoUpdateBoard = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Board>,
   Error,
-  { auth: SudojoAuth; uuid: string; data: BoardUpdateRequest }
+  { token: string; uuid: string; data: BoardUpdateRequest }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      auth,
+      token,
       uuid,
       data,
     }: {
-      auth: SudojoAuth;
+      token: string;
       uuid: string;
       data: BoardUpdateRequest;
     }) => {
-      return client.updateBoard(auth, uuid, data);
+      return client.updateBoard(token, uuid, data);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
@@ -225,21 +220,21 @@ export const useSudojoUpdateBoard = (
  */
 export const useSudojoDeleteBoard = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Board>,
   Error,
-  { auth: SudojoAuth; uuid: string }
+  { token: string; uuid: string }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ auth, uuid }: { auth: SudojoAuth; uuid: string }) => {
-      return client.deleteBoard(auth, uuid);
+    mutationFn: async ({ token, uuid }: { token: string; uuid: string }) => {
+      return client.deleteBoard(token, uuid);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

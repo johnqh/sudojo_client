@@ -32,19 +32,6 @@ import type {
 } from "@sudobility/sudojo_types";
 
 // =============================================================================
-// Configuration Types
-// =============================================================================
-
-export interface SudojoConfig {
-  baseUrl: string;
-  apiToken?: Optional<string>;
-}
-
-export interface SudojoAuth {
-  accessToken: string;
-}
-
-// =============================================================================
 // Solver Option Types
 // =============================================================================
 
@@ -133,9 +120,8 @@ const validateUUID = (uuid: string, name: string = "UUID"): string => {
 // API Configuration Factory
 // =============================================================================
 
-const createApiConfig = (config: SudojoConfig) => ({
-  BASE_URL: config.baseUrl,
-  API_TOKEN: config.apiToken,
+const createApiConfig = (baseUrl: string) => ({
+  BASE_URL: baseUrl,
   ENDPOINTS: {
     // Health
     HEALTH: "/",
@@ -194,8 +180,13 @@ export class SudojoClient {
   private networkClient: NetworkClient;
   private config: ReturnType<typeof createApiConfig>;
 
-  constructor(networkClient: NetworkClient, config: SudojoConfig) {
-    this.config = createApiConfig(config);
+  /**
+   * Create a SudojoClient
+   * @param networkClient - Network client for making requests
+   * @param baseUrl - Base URL for API requests
+   */
+  constructor(networkClient: NetworkClient, baseUrl: string) {
+    this.config = createApiConfig(baseUrl);
     this.baseUrl = this.config.BASE_URL;
     this.networkClient = networkClient;
 
@@ -214,7 +205,7 @@ export class SudojoClient {
       method?: Optional<"GET" | "POST" | "PUT" | "DELETE">;
       body?: Optional<Record<string, unknown>>;
       headers?: Optional<Record<string, string>>;
-      auth?: Optional<SudojoAuth>;
+      token?: Optional<string>;
     } = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
@@ -224,9 +215,9 @@ export class SudojoClient {
       ...options.headers,
     };
 
-    // Add authorization header if auth is provided
-    if (options.auth?.accessToken) {
-      requestHeaders["Authorization"] = `Bearer ${options.auth.accessToken}`;
+    // Add authorization header if token is provided
+    if (options.token) {
+      requestHeaders["Authorization"] = `Bearer ${options.token}`;
     }
 
     const requestOptions: {
@@ -266,33 +257,33 @@ export class SudojoClient {
   // Levels
   // ===========================================================================
 
-  async getLevels(auth: SudojoAuth): Promise<BaseResponse<Level[]>> {
+  async getLevels(token: string): Promise<BaseResponse<Level[]>> {
     return this.request<BaseResponse<Level[]>>(this.config.ENDPOINTS.LEVELS, {
-      auth,
+      token,
     });
   }
 
-  async getLevel(auth: SudojoAuth, uuid: string): Promise<BaseResponse<Level>> {
+  async getLevel(token: string, uuid: string): Promise<BaseResponse<Level>> {
     const validatedUuid = validateUUID(uuid, "Level UUID");
     return this.request<BaseResponse<Level>>(
       this.config.ENDPOINTS.LEVEL(validatedUuid),
-      { auth },
+      { token },
     );
   }
 
   async createLevel(
-    auth: SudojoAuth,
+    token: string,
     data: LevelCreateRequest,
   ): Promise<BaseResponse<Level>> {
     return this.request<BaseResponse<Level>>(this.config.ENDPOINTS.LEVELS, {
       method: "POST",
       body: data as unknown as Record<string, unknown>,
-      auth,
+      token,
     });
   }
 
   async updateLevel(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
     data: LevelUpdateRequest,
   ): Promise<BaseResponse<Level>> {
@@ -302,21 +293,18 @@ export class SudojoClient {
       {
         method: "PUT",
         body: data as unknown as Record<string, unknown>,
-        auth,
+        token,
       },
     );
   }
 
-  async deleteLevel(
-    auth: SudojoAuth,
-    uuid: string,
-  ): Promise<BaseResponse<Level>> {
+  async deleteLevel(token: string, uuid: string): Promise<BaseResponse<Level>> {
     const validatedUuid = validateUUID(uuid, "Level UUID");
     return this.request<BaseResponse<Level>>(
       this.config.ENDPOINTS.LEVEL(validatedUuid),
       {
         method: "DELETE",
-        auth,
+        token,
       },
     );
   }
@@ -326,7 +314,7 @@ export class SudojoClient {
   // ===========================================================================
 
   async getTechniques(
-    auth: SudojoAuth,
+    token: string,
     queryParams?: TechniqueQueryParams,
   ): Promise<BaseResponse<Technique[]>> {
     const params = createURLSearchParams();
@@ -338,22 +326,22 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.TECHNIQUES}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Technique[]>>(endpoint, { auth });
+    return this.request<BaseResponse<Technique[]>>(endpoint, { token });
   }
 
   async getTechnique(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
   ): Promise<BaseResponse<Technique>> {
     const validatedUuid = validateUUID(uuid, "Technique UUID");
     return this.request<BaseResponse<Technique>>(
       this.config.ENDPOINTS.TECHNIQUE(validatedUuid),
-      { auth },
+      { token },
     );
   }
 
   async createTechnique(
-    auth: SudojoAuth,
+    token: string,
     data: TechniqueCreateRequest,
   ): Promise<BaseResponse<Technique>> {
     return this.request<BaseResponse<Technique>>(
@@ -361,13 +349,13 @@ export class SudojoClient {
       {
         method: "POST",
         body: data as unknown as Record<string, unknown>,
-        auth,
+        token,
       },
     );
   }
 
   async updateTechnique(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
     data: TechniqueUpdateRequest,
   ): Promise<BaseResponse<Technique>> {
@@ -377,13 +365,13 @@ export class SudojoClient {
       {
         method: "PUT",
         body: data as unknown as Record<string, unknown>,
-        auth,
+        token,
       },
     );
   }
 
   async deleteTechnique(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
   ): Promise<BaseResponse<Technique>> {
     const validatedUuid = validateUUID(uuid, "Technique UUID");
@@ -391,7 +379,7 @@ export class SudojoClient {
       this.config.ENDPOINTS.TECHNIQUE(validatedUuid),
       {
         method: "DELETE",
-        auth,
+        token,
       },
     );
   }
@@ -401,7 +389,7 @@ export class SudojoClient {
   // ===========================================================================
 
   async getLearning(
-    auth: SudojoAuth,
+    token: string,
     queryParams?: LearningQueryParams,
   ): Promise<BaseResponse<Learning[]>> {
     const params = createURLSearchParams();
@@ -416,22 +404,22 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.LEARNING}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Learning[]>>(endpoint, { auth });
+    return this.request<BaseResponse<Learning[]>>(endpoint, { token });
   }
 
   async getLearningItem(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
   ): Promise<BaseResponse<Learning>> {
     const validatedUuid = validateUUID(uuid, "Learning UUID");
     return this.request<BaseResponse<Learning>>(
       this.config.ENDPOINTS.LEARNING_ITEM(validatedUuid),
-      { auth },
+      { token },
     );
   }
 
   async createLearning(
-    auth: SudojoAuth,
+    token: string,
     data: LearningCreateRequest,
   ): Promise<BaseResponse<Learning>> {
     return this.request<BaseResponse<Learning>>(
@@ -439,13 +427,13 @@ export class SudojoClient {
       {
         method: "POST",
         body: data as unknown as Record<string, unknown>,
-        auth,
+        token,
       },
     );
   }
 
   async updateLearning(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
     data: LearningUpdateRequest,
   ): Promise<BaseResponse<Learning>> {
@@ -455,13 +443,13 @@ export class SudojoClient {
       {
         method: "PUT",
         body: data as unknown as Record<string, unknown>,
-        auth,
+        token,
       },
     );
   }
 
   async deleteLearning(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
   ): Promise<BaseResponse<Learning>> {
     const validatedUuid = validateUUID(uuid, "Learning UUID");
@@ -469,7 +457,7 @@ export class SudojoClient {
       this.config.ENDPOINTS.LEARNING_ITEM(validatedUuid),
       {
         method: "DELETE",
-        auth,
+        token,
       },
     );
   }
@@ -479,7 +467,7 @@ export class SudojoClient {
   // ===========================================================================
 
   async getBoards(
-    auth: SudojoAuth,
+    token: string,
     queryParams?: BoardQueryParams,
   ): Promise<BaseResponse<Board[]>> {
     const params = createURLSearchParams();
@@ -491,11 +479,11 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.BOARDS}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Board[]>>(endpoint, { auth });
+    return this.request<BaseResponse<Board[]>>(endpoint, { token });
   }
 
   async getRandomBoard(
-    auth: SudojoAuth,
+    token: string,
     queryParams?: BoardQueryParams,
   ): Promise<BaseResponse<Board>> {
     const params = createURLSearchParams();
@@ -507,30 +495,30 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.BOARDS_RANDOM}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Board>>(endpoint, { auth });
+    return this.request<BaseResponse<Board>>(endpoint, { token });
   }
 
-  async getBoard(auth: SudojoAuth, uuid: string): Promise<BaseResponse<Board>> {
+  async getBoard(token: string, uuid: string): Promise<BaseResponse<Board>> {
     const validatedUuid = validateUUID(uuid, "Board UUID");
     return this.request<BaseResponse<Board>>(
       this.config.ENDPOINTS.BOARD(validatedUuid),
-      { auth },
+      { token },
     );
   }
 
   async createBoard(
-    auth: SudojoAuth,
+    token: string,
     data: BoardCreateRequest,
   ): Promise<BaseResponse<Board>> {
     return this.request<BaseResponse<Board>>(this.config.ENDPOINTS.BOARDS, {
       method: "POST",
       body: data as unknown as Record<string, unknown>,
-      auth,
+      token,
     });
   }
 
   async updateBoard(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
     data: BoardUpdateRequest,
   ): Promise<BaseResponse<Board>> {
@@ -540,21 +528,18 @@ export class SudojoClient {
       {
         method: "PUT",
         body: data as unknown as Record<string, unknown>,
-        auth,
+        token,
       },
     );
   }
 
-  async deleteBoard(
-    auth: SudojoAuth,
-    uuid: string,
-  ): Promise<BaseResponse<Board>> {
+  async deleteBoard(token: string, uuid: string): Promise<BaseResponse<Board>> {
     const validatedUuid = validateUUID(uuid, "Board UUID");
     return this.request<BaseResponse<Board>>(
       this.config.ENDPOINTS.BOARD(validatedUuid),
       {
         method: "DELETE",
-        auth,
+        token,
       },
     );
   }
@@ -563,28 +548,28 @@ export class SudojoClient {
   // Dailies
   // ===========================================================================
 
-  async getDailies(auth: SudojoAuth): Promise<BaseResponse<Daily[]>> {
+  async getDailies(token: string): Promise<BaseResponse<Daily[]>> {
     return this.request<BaseResponse<Daily[]>>(this.config.ENDPOINTS.DAILIES, {
-      auth,
+      token,
     });
   }
 
-  async getRandomDaily(auth: SudojoAuth): Promise<BaseResponse<Daily>> {
+  async getRandomDaily(token: string): Promise<BaseResponse<Daily>> {
     return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILIES_RANDOM,
-      { auth },
+      { token },
     );
   }
 
-  async getTodayDaily(auth: SudojoAuth): Promise<BaseResponse<Daily>> {
+  async getTodayDaily(token: string): Promise<BaseResponse<Daily>> {
     return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILIES_TODAY,
-      { auth },
+      { token },
     );
   }
 
   async getDailyByDate(
-    auth: SudojoAuth,
+    token: string,
     date: string,
   ): Promise<BaseResponse<Daily>> {
     // Validate date format (YYYY-MM-DD)
@@ -595,31 +580,31 @@ export class SudojoClient {
     }
     return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILIES_DATE(date),
-      { auth },
+      { token },
     );
   }
 
-  async getDaily(auth: SudojoAuth, uuid: string): Promise<BaseResponse<Daily>> {
+  async getDaily(token: string, uuid: string): Promise<BaseResponse<Daily>> {
     const validatedUuid = validateUUID(uuid, "Daily UUID");
     return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILY(validatedUuid),
-      { auth },
+      { token },
     );
   }
 
   async createDaily(
-    auth: SudojoAuth,
+    token: string,
     data: DailyCreateRequest,
   ): Promise<BaseResponse<Daily>> {
     return this.request<BaseResponse<Daily>>(this.config.ENDPOINTS.DAILIES, {
       method: "POST",
       body: data as unknown as Record<string, unknown>,
-      auth,
+      token,
     });
   }
 
   async updateDaily(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
     data: DailyUpdateRequest,
   ): Promise<BaseResponse<Daily>> {
@@ -629,21 +614,18 @@ export class SudojoClient {
       {
         method: "PUT",
         body: data as unknown as Record<string, unknown>,
-        auth,
+        token,
       },
     );
   }
 
-  async deleteDaily(
-    auth: SudojoAuth,
-    uuid: string,
-  ): Promise<BaseResponse<Daily>> {
+  async deleteDaily(token: string, uuid: string): Promise<BaseResponse<Daily>> {
     const validatedUuid = validateUUID(uuid, "Daily UUID");
     return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILY(validatedUuid),
       {
         method: "DELETE",
-        auth,
+        token,
       },
     );
   }
@@ -653,7 +635,7 @@ export class SudojoClient {
   // ===========================================================================
 
   async getChallenges(
-    auth: SudojoAuth,
+    token: string,
     queryParams?: ChallengeQueryParams,
   ): Promise<BaseResponse<Challenge[]>> {
     const params = createURLSearchParams();
@@ -668,11 +650,11 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.CHALLENGES}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Challenge[]>>(endpoint, { auth });
+    return this.request<BaseResponse<Challenge[]>>(endpoint, { token });
   }
 
   async getRandomChallenge(
-    auth: SudojoAuth,
+    token: string,
     queryParams?: ChallengeQueryParams,
   ): Promise<BaseResponse<Challenge>> {
     const params = createURLSearchParams();
@@ -687,22 +669,22 @@ export class SudojoClient {
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.CHALLENGES_RANDOM}${query ? `?${query}` : ""}`;
 
-    return this.request<BaseResponse<Challenge>>(endpoint, { auth });
+    return this.request<BaseResponse<Challenge>>(endpoint, { token });
   }
 
   async getChallenge(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
   ): Promise<BaseResponse<Challenge>> {
     const validatedUuid = validateUUID(uuid, "Challenge UUID");
     return this.request<BaseResponse<Challenge>>(
       this.config.ENDPOINTS.CHALLENGE(validatedUuid),
-      { auth },
+      { token },
     );
   }
 
   async createChallenge(
-    auth: SudojoAuth,
+    token: string,
     data: ChallengeCreateRequest,
   ): Promise<BaseResponse<Challenge>> {
     return this.request<BaseResponse<Challenge>>(
@@ -710,13 +692,13 @@ export class SudojoClient {
       {
         method: "POST",
         body: data as unknown as Record<string, unknown>,
-        auth,
+        token,
       },
     );
   }
 
   async updateChallenge(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
     data: ChallengeUpdateRequest,
   ): Promise<BaseResponse<Challenge>> {
@@ -726,13 +708,13 @@ export class SudojoClient {
       {
         method: "PUT",
         body: data as unknown as Record<string, unknown>,
-        auth,
+        token,
       },
     );
   }
 
   async deleteChallenge(
-    auth: SudojoAuth,
+    token: string,
     uuid: string,
   ): Promise<BaseResponse<Challenge>> {
     const validatedUuid = validateUUID(uuid, "Challenge UUID");
@@ -740,7 +722,7 @@ export class SudojoClient {
       this.config.ENDPOINTS.CHALLENGE(validatedUuid),
       {
         method: "DELETE",
-        auth,
+        token,
       },
     );
   }
@@ -750,7 +732,7 @@ export class SudojoClient {
   // ===========================================================================
 
   async getUserSubscription(
-    auth: SudojoAuth,
+    token: string,
     userId: string,
   ): Promise<BaseResponse<SubscriptionResult>> {
     if (!userId || userId.length === 0 || userId.length > 128) {
@@ -759,7 +741,7 @@ export class SudojoClient {
     return this.request<BaseResponse<SubscriptionResult>>(
       this.config.ENDPOINTS.USER_SUBSCRIPTIONS(userId),
       {
-        auth,
+        token,
       },
     );
   }
@@ -793,7 +775,7 @@ export class SudojoClient {
    * Get hints for solving a Sudoku puzzle
    */
   async solverSolve(
-    auth: SudojoAuth,
+    token: string,
     options: SolveOptions,
   ): Promise<BaseResponse<SolveData>> {
     const url = this.buildSolverUrl(this.config.ENDPOINTS.SOLVER_SOLVE, {
@@ -804,35 +786,35 @@ export class SudojoClient {
       filters: options.filters,
     });
 
-    return this.request<BaseResponse<SolveData>>(url, { auth });
+    return this.request<BaseResponse<SolveData>>(url, { token });
   }
 
   /**
    * Validate that a Sudoku puzzle has a unique solution
    */
   async solverValidate(
-    auth: SudojoAuth,
+    token: string,
     options: ValidateOptions,
   ): Promise<BaseResponse<ValidateData>> {
     const url = this.buildSolverUrl(this.config.ENDPOINTS.SOLVER_VALIDATE, {
       original: options.original,
     });
 
-    return this.request<BaseResponse<ValidateData>>(url, { auth });
+    return this.request<BaseResponse<ValidateData>>(url, { token });
   }
 
   /**
    * Generate a new random Sudoku puzzle
    */
   async solverGenerate(
-    auth: SudojoAuth,
+    token: string,
     options: GenerateOptions = {},
   ): Promise<BaseResponse<GenerateData>> {
     const url = this.buildSolverUrl(this.config.ENDPOINTS.SOLVER_GENERATE, {
       symmetrical: options.symmetrical,
     });
 
-    return this.request<BaseResponse<GenerateData>>(url, { auth });
+    return this.request<BaseResponse<GenerateData>>(url, { token });
   }
 }
 
@@ -842,9 +824,9 @@ export class SudojoClient {
 
 export const createSudojoClient = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): SudojoClient => {
-  return new SudojoClient(networkClient, config);
+  return new SudojoClient(networkClient, baseUrl);
 };
 
 // =============================================================================

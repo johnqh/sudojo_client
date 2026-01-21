@@ -21,8 +21,6 @@ import { SudojoClient } from "../../network/sudojo-client";
 import type {
   GenerateOptions,
   SolveOptions,
-  SudojoAuth,
-  SudojoConfig,
   ValidateOptions,
 } from "../../network/sudojo-client";
 
@@ -34,15 +32,15 @@ import type {
  * Hook to get solving hints for a Sudoku puzzle
  *
  * @param networkClient - Network client for API calls
- * @param config - Client configuration
- * @param auth - Authentication with Firebase access token
+ * @param baseUrl - Base URL for the API
+ * @param token - Firebase access token
  * @param options - Solve options (original puzzle, user input, etc.)
  * @param queryOptions - React Query options
  */
 export const useSolverSolve = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   options: SolveOptions,
   queryOptions?: Omit<
     UseQueryOptions<BaseResponse<SolveData>>,
@@ -50,18 +48,16 @@ export const useSolverSolve = (
   >,
 ): UseQueryResult<BaseResponse<SolveData>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
-  const accessToken = auth?.accessToken;
-
   const queryFn = useCallback(async (): Promise<BaseResponse<SolveData>> => {
-    return client.solverSolve({ accessToken: accessToken ?? "" }, options);
-  }, [client, accessToken, options]);
+    return client.solverSolve(token, options);
+  }, [client, token, options]);
 
   const isEnabled =
-    !!accessToken &&
+    !!token &&
     (queryOptions?.enabled !== undefined ? queryOptions.enabled : true);
 
   return useQuery({
@@ -87,15 +83,15 @@ export const useSolverSolve = (
  * Hook to validate a Sudoku puzzle has a unique solution
  *
  * @param networkClient - Network client for API calls
- * @param config - Client configuration
- * @param auth - Authentication with Firebase access token
+ * @param baseUrl - Base URL for the API
+ * @param token - Firebase access token
  * @param options - Validate options (original puzzle)
  * @param queryOptions - React Query options
  */
 export const useSolverValidate = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   options: ValidateOptions,
   queryOptions?: Omit<
     UseQueryOptions<BaseResponse<ValidateData>>,
@@ -103,18 +99,16 @@ export const useSolverValidate = (
   >,
 ): UseQueryResult<BaseResponse<ValidateData>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
-  const accessToken = auth?.accessToken;
-
   const queryFn = useCallback(async (): Promise<BaseResponse<ValidateData>> => {
-    return client.solverValidate({ accessToken: accessToken ?? "" }, options);
-  }, [client, accessToken, options]);
+    return client.solverValidate(token, options);
+  }, [client, token, options]);
 
   const isEnabled =
-    !!accessToken &&
+    !!token &&
     (queryOptions?.enabled !== undefined ? queryOptions.enabled : true);
 
   return useQuery({
@@ -134,15 +128,15 @@ export const useSolverValidate = (
  * Hook to generate a new random Sudoku puzzle
  *
  * @param networkClient - Network client for API calls
- * @param config - Client configuration
- * @param auth - Authentication with Firebase access token
+ * @param baseUrl - Base URL for the API
+ * @param token - Firebase access token
  * @param options - Generate options (symmetrical, etc.)
  * @param queryOptions - React Query options
  */
 export const useSolverGenerate = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   options: GenerateOptions = {},
   queryOptions?: Omit<
     UseQueryOptions<BaseResponse<GenerateData>>,
@@ -150,18 +144,16 @@ export const useSolverGenerate = (
   >,
 ): UseQueryResult<BaseResponse<GenerateData>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
-  const accessToken = auth?.accessToken;
-
   const queryFn = useCallback(async (): Promise<BaseResponse<GenerateData>> => {
-    return client.solverGenerate({ accessToken: accessToken ?? "" }, options);
-  }, [client, accessToken, options]);
+    return client.solverGenerate(token, options);
+  }, [client, token, options]);
 
   const isEnabled =
-    !!accessToken &&
+    !!token &&
     (queryOptions?.enabled !== undefined ? queryOptions.enabled : true);
 
   return useQuery({

@@ -22,15 +22,14 @@ import type {
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
-import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 
 /**
  * Hook to get all techniques with optional filtering
  */
 export const useSudojoTechniques = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   queryParams?: TechniqueQueryParams,
   options?: Omit<
     UseQueryOptions<BaseResponse<Technique[]>>,
@@ -38,13 +37,16 @@ export const useSudojoTechniques = (
   >,
 ): UseQueryResult<BaseResponse<Technique[]>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Technique[]>> => {
-    return client.getTechniques(auth, queryParams);
-  }, [client, auth, queryParams]);
+    return client.getTechniques(token, queryParams);
+  }, [client, token, queryParams]);
+
+  const isEnabled =
+    !!token && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.techniques({
@@ -52,8 +54,8 @@ export const useSudojoTechniques = (
     }),
     queryFn,
     staleTime: STALE_TIMES.TECHNIQUES,
-    enabled: !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -62,8 +64,8 @@ export const useSudojoTechniques = (
  */
 export const useSudojoTechnique = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   uuid: string,
   options?: Omit<
     UseQueryOptions<BaseResponse<Technique>>,
@@ -71,20 +73,25 @@ export const useSudojoTechnique = (
   >,
 ): UseQueryResult<BaseResponse<Technique>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Technique>> => {
-    return client.getTechnique(auth, uuid);
-  }, [client, auth, uuid]);
+    return client.getTechnique(token, uuid);
+  }, [client, token, uuid]);
+
+  const isEnabled =
+    !!uuid &&
+    !!token &&
+    (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.technique(uuid),
     queryFn,
     staleTime: STALE_TIMES.TECHNIQUES,
-    enabled: !!uuid && !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -93,27 +100,27 @@ export const useSudojoTechnique = (
  */
 export const useSudojoCreateTechnique = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Technique>,
   Error,
-  { auth: SudojoAuth; data: TechniqueCreateRequest }
+  { token: string; data: TechniqueCreateRequest }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      auth,
+      token,
       data,
     }: {
-      auth: SudojoAuth;
+      token: string;
       data: TechniqueCreateRequest;
     }) => {
-      return client.createTechnique(auth, data);
+      return client.createTechnique(token, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -128,29 +135,29 @@ export const useSudojoCreateTechnique = (
  */
 export const useSudojoUpdateTechnique = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Technique>,
   Error,
-  { auth: SudojoAuth; uuid: string; data: TechniqueUpdateRequest }
+  { token: string; uuid: string; data: TechniqueUpdateRequest }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      auth,
+      token,
       uuid,
       data,
     }: {
-      auth: SudojoAuth;
+      token: string;
       uuid: string;
       data: TechniqueUpdateRequest;
     }) => {
-      return client.updateTechnique(auth, uuid, data);
+      return client.updateTechnique(token, uuid, data);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
@@ -168,21 +175,21 @@ export const useSudojoUpdateTechnique = (
  */
 export const useSudojoDeleteTechnique = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Technique>,
   Error,
-  { auth: SudojoAuth; uuid: string }
+  { token: string; uuid: string }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ auth, uuid }: { auth: SudojoAuth; uuid: string }) => {
-      return client.deleteTechnique(auth, uuid);
+    mutationFn: async ({ token, uuid }: { token: string; uuid: string }) => {
+      return client.deleteTechnique(token, uuid);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

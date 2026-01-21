@@ -21,33 +21,30 @@ import type {
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
-import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 
 /**
  * Hook to get all dailies
  */
 export const useSudojoDailies = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   options?: Omit<
     UseQueryOptions<BaseResponse<Daily[]>>,
     "queryKey" | "queryFn"
   >,
 ): UseQueryResult<BaseResponse<Daily[]>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
-  const accessToken = auth?.accessToken;
-
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily[]>> => {
-    return client.getDailies({ accessToken: accessToken ?? "" });
-  }, [client, accessToken]);
+    return client.getDailies(token);
+  }, [client, token]);
 
   const isEnabled =
-    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
+    !!token && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailies(),
@@ -63,23 +60,21 @@ export const useSudojoDailies = (
  */
 export const useSudojoRandomDaily = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   options?: Omit<UseQueryOptions<BaseResponse<Daily>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Daily>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
-  const accessToken = auth?.accessToken;
-
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getRandomDaily({ accessToken: accessToken ?? "" });
-  }, [client, accessToken]);
+    return client.getRandomDaily(token);
+  }, [client, token]);
 
   const isEnabled =
-    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
+    !!token && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyRandom(),
@@ -95,23 +90,21 @@ export const useSudojoRandomDaily = (
  */
 export const useSudojoTodayDaily = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   options?: Omit<UseQueryOptions<BaseResponse<Daily>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Daily>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
-  const accessToken = auth?.accessToken;
-
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getTodayDaily({ accessToken: accessToken ?? "" });
-  }, [client, accessToken]);
+    return client.getTodayDaily(token);
+  }, [client, token]);
 
   const isEnabled =
-    !!accessToken && (options?.enabled !== undefined ? options.enabled : true);
+    !!token && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyToday(),
@@ -127,25 +120,23 @@ export const useSudojoTodayDaily = (
  */
 export const useSudojoDailyByDate = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   date: string,
   options?: Omit<UseQueryOptions<BaseResponse<Daily>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Daily>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
-  const accessToken = auth?.accessToken;
-
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getDailyByDate({ accessToken: accessToken ?? "" }, date);
-  }, [client, accessToken, date]);
+    return client.getDailyByDate(token, date);
+  }, [client, token, date]);
 
   const isEnabled =
     !!date &&
-    !!accessToken &&
+    !!token &&
     (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
@@ -162,25 +153,23 @@ export const useSudojoDailyByDate = (
  */
 export const useSudojoDaily = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   uuid: string,
   options?: Omit<UseQueryOptions<BaseResponse<Daily>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Daily>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
-  const accessToken = auth?.accessToken;
-
   const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getDaily({ accessToken: accessToken ?? "" }, uuid);
-  }, [client, accessToken, uuid]);
+    return client.getDaily(token, uuid);
+  }, [client, token, uuid]);
 
   const isEnabled =
     !!uuid &&
-    !!accessToken &&
+    !!token &&
     (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
@@ -197,27 +186,27 @@ export const useSudojoDaily = (
  */
 export const useSudojoCreateDaily = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Daily>,
   Error,
-  { auth: SudojoAuth; data: DailyCreateRequest }
+  { token: string; data: DailyCreateRequest }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      auth,
+      token,
       data,
     }: {
-      auth: SudojoAuth;
+      token: string;
       data: DailyCreateRequest;
     }) => {
-      return client.createDaily(auth, data);
+      return client.createDaily(token, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -232,29 +221,29 @@ export const useSudojoCreateDaily = (
  */
 export const useSudojoUpdateDaily = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Daily>,
   Error,
-  { auth: SudojoAuth; uuid: string; data: DailyUpdateRequest }
+  { token: string; uuid: string; data: DailyUpdateRequest }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      auth,
+      token,
       uuid,
       data,
     }: {
-      auth: SudojoAuth;
+      token: string;
       uuid: string;
       data: DailyUpdateRequest;
     }) => {
-      return client.updateDaily(auth, uuid, data);
+      return client.updateDaily(token, uuid, data);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
@@ -272,21 +261,21 @@ export const useSudojoUpdateDaily = (
  */
 export const useSudojoDeleteDaily = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Daily>,
   Error,
-  { auth: SudojoAuth; uuid: string }
+  { token: string; uuid: string }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ auth, uuid }: { auth: SudojoAuth; uuid: string }) => {
-      return client.deleteDaily(auth, uuid);
+    mutationFn: async ({ token, uuid }: { token: string; uuid: string }) => {
+      return client.deleteDaily(token, uuid);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

@@ -16,7 +16,6 @@ import type {
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
-import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 
 /**
  * Hook to get user subscription status
@@ -26,8 +25,8 @@ import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
  */
 export const useSudojoUserSubscription = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   userId: string,
   options?: Omit<
     UseQueryOptions<BaseResponse<SubscriptionResult>>,
@@ -35,21 +34,26 @@ export const useSudojoUserSubscription = (
   >,
 ): UseQueryResult<BaseResponse<SubscriptionResult>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   const queryFn = useCallback(async (): Promise<
     BaseResponse<SubscriptionResult>
   > => {
-    return client.getUserSubscription(auth, userId);
-  }, [client, auth, userId]);
+    return client.getUserSubscription(token, userId);
+  }, [client, token, userId]);
+
+  const isEnabled =
+    !!userId &&
+    !!token &&
+    (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.userSubscription(userId),
     queryFn,
     staleTime: STALE_TIMES.USER_SUBSCRIPTION,
-    enabled: !!userId && !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };

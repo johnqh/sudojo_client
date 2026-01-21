@@ -22,15 +22,14 @@ import type {
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
-import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 
 /**
  * Hook to get all learning entries with optional filtering
  */
 export const useSudojoLearning = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   queryParams?: LearningQueryParams,
   options?: Omit<
     UseQueryOptions<BaseResponse<Learning[]>>,
@@ -38,13 +37,16 @@ export const useSudojoLearning = (
   >,
 ): UseQueryResult<BaseResponse<Learning[]>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Learning[]>> => {
-    return client.getLearning(auth, queryParams);
-  }, [client, auth, queryParams]);
+    return client.getLearning(token, queryParams);
+  }, [client, token, queryParams]);
+
+  const isEnabled =
+    !!token && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.learning({
@@ -53,8 +55,8 @@ export const useSudojoLearning = (
     }),
     queryFn,
     staleTime: STALE_TIMES.LEARNING,
-    enabled: !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -63,8 +65,8 @@ export const useSudojoLearning = (
  */
 export const useSudojoLearningItem = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   uuid: string,
   options?: Omit<
     UseQueryOptions<BaseResponse<Learning>>,
@@ -72,20 +74,25 @@ export const useSudojoLearningItem = (
   >,
 ): UseQueryResult<BaseResponse<Learning>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Learning>> => {
-    return client.getLearningItem(auth, uuid);
-  }, [client, auth, uuid]);
+    return client.getLearningItem(token, uuid);
+  }, [client, token, uuid]);
+
+  const isEnabled =
+    !!uuid &&
+    !!token &&
+    (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.learningItem(uuid),
     queryFn,
     staleTime: STALE_TIMES.LEARNING,
-    enabled: !!uuid && !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -94,27 +101,27 @@ export const useSudojoLearningItem = (
  */
 export const useSudojoCreateLearning = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Learning>,
   Error,
-  { auth: SudojoAuth; data: LearningCreateRequest }
+  { token: string; data: LearningCreateRequest }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      auth,
+      token,
       data,
     }: {
-      auth: SudojoAuth;
+      token: string;
       data: LearningCreateRequest;
     }) => {
-      return client.createLearning(auth, data);
+      return client.createLearning(token, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -129,29 +136,29 @@ export const useSudojoCreateLearning = (
  */
 export const useSudojoUpdateLearning = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Learning>,
   Error,
-  { auth: SudojoAuth; uuid: string; data: LearningUpdateRequest }
+  { token: string; uuid: string; data: LearningUpdateRequest }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      auth,
+      token,
       uuid,
       data,
     }: {
-      auth: SudojoAuth;
+      token: string;
       uuid: string;
       data: LearningUpdateRequest;
     }) => {
-      return client.updateLearning(auth, uuid, data);
+      return client.updateLearning(token, uuid, data);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
@@ -169,21 +176,21 @@ export const useSudojoUpdateLearning = (
  */
 export const useSudojoDeleteLearning = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Learning>,
   Error,
-  { auth: SudojoAuth; uuid: string }
+  { token: string; uuid: string }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ auth, uuid }: { auth: SudojoAuth; uuid: string }) => {
-      return client.deleteLearning(auth, uuid);
+    mutationFn: async ({ token, uuid }: { token: string; uuid: string }) => {
+      return client.deleteLearning(token, uuid);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

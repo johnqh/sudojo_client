@@ -7,7 +7,5 @@ export {
 export type {
   GenerateOptions,
   SolveOptions,
-  SudojoAuth,
-  SudojoConfig,
   ValidateOptions,
 } from "./sudojo-client";

@@ -5,13 +5,7 @@ export {
   SudojoClient,
   validateUUID,
 } from "./network";
-export type {
-  GenerateOptions,
-  SolveOptions,
-  SudojoAuth,
-  SudojoConfig,
-  ValidateOptions,
-} from "./network";
+export type { GenerateOptions, SolveOptions, ValidateOptions } from "./network";
 
 // React hooks
 export {

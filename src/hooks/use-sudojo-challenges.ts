@@ -22,15 +22,14 @@ import type {
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
-import type { SudojoAuth, SudojoConfig } from "../network/sudojo-client";
 
 /**
  * Hook to get all challenges with optional filtering
  */
 export const useSudojoChallenges = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   queryParams?: ChallengeQueryParams,
   options?: Omit<
     UseQueryOptions<BaseResponse<Challenge[]>>,
@@ -38,13 +37,16 @@ export const useSudojoChallenges = (
   >,
 ): UseQueryResult<BaseResponse<Challenge[]>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Challenge[]>> => {
-    return client.getChallenges(auth, queryParams);
-  }, [client, auth, queryParams]);
+    return client.getChallenges(token, queryParams);
+  }, [client, token, queryParams]);
+
+  const isEnabled =
+    !!token && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.challenges({
@@ -53,8 +55,8 @@ export const useSudojoChallenges = (
     }),
     queryFn,
     staleTime: STALE_TIMES.CHALLENGES,
-    enabled: !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -63,8 +65,8 @@ export const useSudojoChallenges = (
  */
 export const useSudojoRandomChallenge = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   queryParams?: ChallengeQueryParams,
   options?: Omit<
     UseQueryOptions<BaseResponse<Challenge>>,
@@ -72,13 +74,16 @@ export const useSudojoRandomChallenge = (
   >,
 ): UseQueryResult<BaseResponse<Challenge>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Challenge>> => {
-    return client.getRandomChallenge(auth, queryParams);
-  }, [client, auth, queryParams]);
+    return client.getRandomChallenge(token, queryParams);
+  }, [client, token, queryParams]);
+
+  const isEnabled =
+    !!token && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.challengeRandom({
@@ -87,8 +92,8 @@ export const useSudojoRandomChallenge = (
     }),
     queryFn,
     staleTime: 0, // Always fetch fresh for random
-    enabled: !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -97,8 +102,8 @@ export const useSudojoRandomChallenge = (
  */
 export const useSudojoChallenge = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
-  auth: SudojoAuth,
+  baseUrl: string,
+  token: string,
   uuid: string,
   options?: Omit<
     UseQueryOptions<BaseResponse<Challenge>>,
@@ -106,20 +111,25 @@ export const useSudojoChallenge = (
   >,
 ): UseQueryResult<BaseResponse<Challenge>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Challenge>> => {
-    return client.getChallenge(auth, uuid);
-  }, [client, auth, uuid]);
+    return client.getChallenge(token, uuid);
+  }, [client, token, uuid]);
+
+  const isEnabled =
+    !!uuid &&
+    !!token &&
+    (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.challenge(uuid),
     queryFn,
     staleTime: STALE_TIMES.CHALLENGES,
-    enabled: !!uuid && !!auth?.accessToken,
     ...options,
+    enabled: isEnabled,
   });
 };
 
@@ -128,27 +138,27 @@ export const useSudojoChallenge = (
  */
 export const useSudojoCreateChallenge = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Challenge>,
   Error,
-  { auth: SudojoAuth; data: ChallengeCreateRequest }
+  { token: string; data: ChallengeCreateRequest }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      auth,
+      token,
       data,
     }: {
-      auth: SudojoAuth;
+      token: string;
       data: ChallengeCreateRequest;
     }) => {
-      return client.createChallenge(auth, data);
+      return client.createChallenge(token, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -163,29 +173,29 @@ export const useSudojoCreateChallenge = (
  */
 export const useSudojoUpdateChallenge = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Challenge>,
   Error,
-  { auth: SudojoAuth; uuid: string; data: ChallengeUpdateRequest }
+  { token: string; uuid: string; data: ChallengeUpdateRequest }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      auth,
+      token,
       uuid,
       data,
     }: {
-      auth: SudojoAuth;
+      token: string;
       uuid: string;
       data: ChallengeUpdateRequest;
     }) => {
-      return client.updateChallenge(auth, uuid, data);
+      return client.updateChallenge(token, uuid, data);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
@@ -203,21 +213,21 @@ export const useSudojoUpdateChallenge = (
  */
 export const useSudojoDeleteChallenge = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
 ): UseMutationResult<
   BaseResponse<Challenge>,
   Error,
-  { auth: SudojoAuth; uuid: string }
+  { token: string; uuid: string }
 > => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ auth, uuid }: { auth: SudojoAuth; uuid: string }) => {
-      return client.deleteChallenge(auth, uuid);
+    mutationFn: async ({ token, uuid }: { token: string; uuid: string }) => {
+      return client.deleteChallenge(token, uuid);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

@@ -13,7 +13,6 @@ import type { BaseResponse, HealthCheckData } from "@sudobility/sudojo_types";
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
-import type { SudojoConfig } from "../network/sudojo-client";
 
 /**
  * Hook to get Sudojo server health status
@@ -24,15 +23,15 @@ import type { SudojoConfig } from "../network/sudojo-client";
  */
 export const useSudojoHealth = (
   networkClient: NetworkClient,
-  config: SudojoConfig,
+  baseUrl: string,
   options?: Omit<
     UseQueryOptions<BaseResponse<HealthCheckData>>,
     "queryKey" | "queryFn"
   >,
 ): UseQueryResult<BaseResponse<HealthCheckData>> => {
   const client = useMemo(
-    () => new SudojoClient(networkClient, config),
-    [networkClient, config],
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
   );
 
   const queryFn = useCallback(async (): Promise<
