@@ -43,8 +43,8 @@ export const useSudojoDailies = (
     return client.getDailies(token);
   }, [client, token]);
 
-  const isEnabled =
-    !!token && (options?.enabled !== undefined ? options.enabled : true);
+  // Public endpoint - no token required
+  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailies(),
@@ -73,8 +73,8 @@ export const useSudojoRandomDaily = (
     return client.getRandomDaily(token);
   }, [client, token]);
 
-  const isEnabled =
-    !!token && (options?.enabled !== undefined ? options.enabled : true);
+  // Public endpoint - no token required
+  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyRandom(),
@@ -103,8 +103,8 @@ export const useSudojoTodayDaily = (
     return client.getTodayDaily(token);
   }, [client, token]);
 
-  const isEnabled =
-    !!token && (options?.enabled !== undefined ? options.enabled : true);
+  // Public endpoint - no token required
+  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyToday(),
@@ -134,10 +134,9 @@ export const useSudojoDailyByDate = (
     return client.getDailyByDate(token, date);
   }, [client, token, date]);
 
+  // Public endpoint - no token required, but date is required
   const isEnabled =
-    !!date &&
-    !!token &&
-    (options?.enabled !== undefined ? options.enabled : true);
+    !!date && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.dailyByDate(date),
@@ -167,10 +166,9 @@ export const useSudojoDaily = (
     return client.getDaily(token, uuid);
   }, [client, token, uuid]);
 
+  // Public endpoint - no token required, but uuid is required
   const isEnabled =
-    !!uuid &&
-    !!token &&
-    (options?.enabled !== undefined ? options.enabled : true);
+    !!uuid && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.daily(uuid),

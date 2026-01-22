@@ -45,8 +45,8 @@ export const useSudojoLearning = (
     return client.getLearning(token, queryParams);
   }, [client, token, queryParams]);
 
-  const isEnabled =
-    !!token && (options?.enabled !== undefined ? options.enabled : true);
+  // Public endpoint - no token required
+  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
     queryKey: queryKeys.sudojo.learning({
@@ -82,10 +82,9 @@ export const useSudojoLearningItem = (
     return client.getLearningItem(token, uuid);
   }, [client, token, uuid]);
 
+  // Public endpoint - no token required, but uuid is required
   const isEnabled =
-    !!uuid &&
-    !!token &&
-    (options?.enabled !== undefined ? options.enabled : true);
+    !!uuid && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.learningItem(uuid),

@@ -25,6 +25,7 @@ import { SudojoClient } from "../network/sudojo-client";
 
 /**
  * Hook to get all boards with optional filtering
+ * Note: This is a public endpoint - token is optional
  */
 export const useSudojoBoards = (
   networkClient: NetworkClient,
@@ -51,9 +52,8 @@ export const useSudojoBoards = (
     );
   }, [client, token, levelUuid]);
 
-  // Combine auth check with caller's enabled option
-  const isEnabled =
-    !!token && (options?.enabled !== undefined ? options.enabled : true);
+  // Public endpoint - no token required
+  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
     queryKey: queryKeys.sudojo.boards({
@@ -68,6 +68,7 @@ export const useSudojoBoards = (
 
 /**
  * Hook to get a random board with optional filtering
+ * Note: This is a public endpoint - token is optional
  */
 export const useSudojoRandomBoard = (
   networkClient: NetworkClient,
@@ -91,9 +92,8 @@ export const useSudojoRandomBoard = (
     );
   }, [client, token, levelUuid]);
 
-  // Combine auth check with caller's enabled option
-  const isEnabled =
-    !!token && (options?.enabled !== undefined ? options.enabled : true);
+  // Public endpoint - no token required
+  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
     queryKey: queryKeys.sudojo.boardRandom({
@@ -108,6 +108,7 @@ export const useSudojoRandomBoard = (
 
 /**
  * Hook to get a specific board by UUID
+ * Note: This is a public endpoint - token is optional
  */
 export const useSudojoBoard = (
   networkClient: NetworkClient,
@@ -125,11 +126,9 @@ export const useSudojoBoard = (
     return client.getBoard(token, uuid);
   }, [client, token, uuid]);
 
-  // Combine auth check with caller's enabled option
+  // Public endpoint - no token required, but uuid is required
   const isEnabled =
-    !!uuid &&
-    !!token &&
-    (options?.enabled !== undefined ? options.enabled : true);
+    !!uuid && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.board(uuid),

@@ -45,8 +45,8 @@ export const useSudojoChallenges = (
     return client.getChallenges(token, queryParams);
   }, [client, token, queryParams]);
 
-  const isEnabled =
-    !!token && (options?.enabled !== undefined ? options.enabled : true);
+  // Public endpoint - no token required
+  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
     queryKey: queryKeys.sudojo.challenges({
@@ -82,8 +82,8 @@ export const useSudojoRandomChallenge = (
     return client.getRandomChallenge(token, queryParams);
   }, [client, token, queryParams]);
 
-  const isEnabled =
-    !!token && (options?.enabled !== undefined ? options.enabled : true);
+  // Public endpoint - no token required
+  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
     queryKey: queryKeys.sudojo.challengeRandom({
@@ -119,10 +119,9 @@ export const useSudojoChallenge = (
     return client.getChallenge(token, uuid);
   }, [client, token, uuid]);
 
+  // Public endpoint - no token required, but uuid is required
   const isEnabled =
-    !!uuid &&
-    !!token &&
-    (options?.enabled !== undefined ? options.enabled : true);
+    !!uuid && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.challenge(uuid),
