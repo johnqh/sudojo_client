@@ -107,9 +107,9 @@ export const useSolverValidate = (
     return client.solverValidate(token, options);
   }, [client, token, options]);
 
+  // Validate endpoint does not require authentication
   const isEnabled =
-    !!token &&
-    (queryOptions?.enabled !== undefined ? queryOptions.enabled : true);
+    queryOptions?.enabled !== undefined ? queryOptions.enabled : true;
 
   return useQuery({
     queryKey: solverQueryKeys.validate(options.original),
