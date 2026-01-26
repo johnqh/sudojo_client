@@ -25,7 +25,9 @@ export class HintAccessDeniedError extends Error {
   /**
    * Check if an error is a HintAccessDeniedError
    */
-  static isHintAccessDeniedError(error: unknown): error is HintAccessDeniedError {
+  static isHintAccessDeniedError(
+    error: unknown,
+  ): error is HintAccessDeniedError {
     return error instanceof HintAccessDeniedError;
   }
 }
