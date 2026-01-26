@@ -14,6 +14,7 @@ import type {
   DailyUpdateRequest,
   GenerateData,
   HealthCheckData,
+  HintAccessDeniedResponse,
   Learning,
   LearningCreateRequest,
   LearningQueryParams,
@@ -30,6 +31,7 @@ import type {
   TechniqueUpdateRequest,
   ValidateData,
 } from "@sudobility/sudojo_types";
+import { HintAccessDeniedError } from "../errors";
 
 // =============================================================================
 // Solver Option Types
@@ -773,6 +775,7 @@ export class SudojoClient {
 
   /**
    * Get hints for solving a Sudoku puzzle
+   * @throws {HintAccessDeniedError} When hint level exceeds user's subscription tier
    */
   async solverSolve(
     token: string,
@@ -786,7 +789,36 @@ export class SudojoClient {
       filters: options.filters,
     });
 
-    return this.request<BaseResponse<SolveData>>(url, { token });
+    const fullUrl = `${this.baseUrl}${url}`;
+    const requestHeaders: Record<string, string> = {
+      ...this.headers,
+    };
+
+    if (token) {
+      requestHeaders["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await this.networkClient.request<
+      BaseResponse<SolveData> | HintAccessDeniedResponse
+    >(fullUrl, {
+      method: "GET",
+      headers: requestHeaders,
+    });
+
+    // Check for hint access denied (402)
+    if (response.status === 402 && response.data) {
+      const errorResponse = response.data as HintAccessDeniedResponse;
+      if (errorResponse.error?.code === "HINT_ACCESS_DENIED") {
+        throw new HintAccessDeniedError(errorResponse.error);
+      }
+    }
+
+    // Check for other errors
+    if (!response.ok || response.data === undefined) {
+      throw new Error("Failed to get hints from solver");
+    }
+
+    return response.data as BaseResponse<SolveData>;
   }
 
   /**

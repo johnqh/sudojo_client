@@ -7,6 +7,9 @@ export {
 } from "./network";
 export type { GenerateOptions, SolveOptions, ValidateOptions } from "./network";
 
+// Errors
+export { HintAccessDeniedError } from "./errors";
+
 // React hooks
 export {
   // Query utilities
@@ -78,6 +81,10 @@ export type {
   DailyUpdateRequest,
   GenerateData,
   HealthCheckData,
+  HintAccessDeniedError as HintAccessDeniedErrorData,
+  HintAccessDeniedResponse,
+  HintAccessUserState,
+  HintEntitlement,
   Learning,
   LearningCreateRequest,
   LearningQueryParams,
@@ -106,6 +113,7 @@ export type {
   TechniqueUpdateRequest,
   ValidateData,
 } from "@sudobility/sudojo_types";
+export { HINT_LEVEL_LIMITS } from "@sudobility/sudojo_types";
 
 // Solver hooks
 export {
