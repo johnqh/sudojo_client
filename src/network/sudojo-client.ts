@@ -869,11 +869,22 @@ export class SudojoClient {
       requestHeaders["Authorization"] = `Bearer ${token}`;
     }
 
+    console.log("[solverSolve] Making request to:", fullUrl.substring(0, 100) + "...");
+
     const response = await this.networkClient.request<
       BaseResponse<SolveData> | HintAccessDeniedResponse
     >(fullUrl, {
       method: "GET",
       headers: requestHeaders,
+    });
+
+    // Debug: Log response details
+    console.log("[solverSolve] Response received:", {
+      ok: response.ok,
+      status: response.status,
+      hasData: response.data !== undefined,
+      dataType: typeof response.data,
+      dataKeys: response.data ? Object.keys(response.data) : [],
     });
 
     // Check for hint access denied (402)
@@ -886,6 +897,10 @@ export class SudojoClient {
 
     // Check for other errors
     if (!response.ok || response.data === undefined) {
+      console.error("[solverSolve] Error condition met:", {
+        ok: response.ok,
+        dataIsUndefined: response.data === undefined,
+      });
       throw new Error("Failed to get hints from solver");
     }
 
