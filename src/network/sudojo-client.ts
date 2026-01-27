@@ -869,7 +869,10 @@ export class SudojoClient {
       requestHeaders["Authorization"] = `Bearer ${token}`;
     }
 
-    console.log("[solverSolve] Making request to:", fullUrl.substring(0, 100) + "...");
+    console.log(
+      "[solverSolve] Making request to:",
+      `${fullUrl.substring(0, 100)}...`,
+    );
 
     const response = await this.networkClient.request<
       BaseResponse<SolveData> | HintAccessDeniedResponse
