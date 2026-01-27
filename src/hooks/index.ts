@@ -98,3 +98,14 @@ export {
 // ============================================================================
 
 export { useSudojoUserSubscription } from "./use-sudojo-users";
+
+// ============================================================================
+// Practice hooks
+// ============================================================================
+
+export {
+  useSudojoCreatePractice,
+  useSudojoDeleteAllPractices,
+  useSudojoPracticeCounts,
+  useSudojoRandomPractice,
+} from "./use-sudojo-practices";

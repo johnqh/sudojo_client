@@ -27,6 +27,9 @@ import type {
   SubscriptionResult,
   Technique,
   TechniqueCreateRequest,
+  TechniquePractice,
+  TechniquePracticeCountItem,
+  TechniquePracticeCreateRequest,
   TechniqueQueryParams,
   TechniqueUpdateRequest,
   ValidateData,
@@ -165,6 +168,12 @@ const createApiConfig = (baseUrl: string) => ({
     SOLVER_SOLVE: "/api/v1/solver/solve",
     SOLVER_VALIDATE: "/api/v1/solver/validate",
     SOLVER_GENERATE: "/api/v1/solver/generate",
+
+    // Practices
+    PRACTICES: "/api/v1/practices",
+    PRACTICES_COUNTS: "/api/v1/practices/counts",
+    PRACTICE_RANDOM: (techniqueUuid: string) =>
+      `/api/v1/practices/technique/${techniqueUuid}/random`,
   },
   DEFAULT_HEADERS: {
     "Content-Type": "application/json",
@@ -743,6 +752,68 @@ export class SudojoClient {
     return this.request<BaseResponse<SubscriptionResult>>(
       this.config.ENDPOINTS.USER_SUBSCRIPTIONS(userId),
       {
+        token,
+      },
+    );
+  }
+
+  // ===========================================================================
+  // Practices
+  // ===========================================================================
+
+  /**
+   * Get practice counts for all techniques
+   */
+  async getPracticeCounts(
+    token: string,
+  ): Promise<BaseResponse<TechniquePracticeCountItem[]>> {
+    return this.request<BaseResponse<TechniquePracticeCountItem[]>>(
+      this.config.ENDPOINTS.PRACTICES_COUNTS,
+      { token },
+    );
+  }
+
+  /**
+   * Get a random practice for a specific technique
+   */
+  async getRandomPractice(
+    token: string,
+    techniqueUuid: string,
+  ): Promise<BaseResponse<TechniquePractice>> {
+    const validatedUuid = validateUUID(techniqueUuid, "Technique UUID");
+    return this.request<BaseResponse<TechniquePractice>>(
+      this.config.ENDPOINTS.PRACTICE_RANDOM(validatedUuid),
+      { token },
+    );
+  }
+
+  /**
+   * Create a new practice (admin only)
+   */
+  async createPractice(
+    token: string,
+    data: TechniquePracticeCreateRequest,
+  ): Promise<BaseResponse<TechniquePractice>> {
+    return this.request<BaseResponse<TechniquePractice>>(
+      this.config.ENDPOINTS.PRACTICES,
+      {
+        method: "POST",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  /**
+   * Delete all practices (admin only, requires confirm=true)
+   */
+  async deleteAllPractices(
+    token: string,
+  ): Promise<BaseResponse<{ deleted: number; message: string }>> {
+    return this.request<BaseResponse<{ deleted: number; message: string }>>(
+      `${this.config.ENDPOINTS.PRACTICES}?confirm=true`,
+      {
+        method: "DELETE",
         token,
       },
     );

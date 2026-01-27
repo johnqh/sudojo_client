@@ -60,6 +60,11 @@ export const queryKeys = {
     // Users
     userSubscription: (userId: string) =>
       [...sudojoBase(), "users", userId, "subscription"] as const,
+
+    // Practices
+    practiceCounts: () => [...sudojoBase(), "practices", "counts"] as const,
+    practiceRandom: (techniqueUuid: string) =>
+      [...sudojoBase(), "practices", "random", techniqueUuid] as const,
   },
 } as const;
 
