@@ -54,6 +54,8 @@ export interface SolveOptions {
   pencilmarks?: string;
   /** Optional technique filters */
   filters?: string;
+  /** Optional comma-delimited list of technique numbers to filter solving (e.g., "1,2,3") */
+  techniques?: string;
 }
 
 /**
@@ -858,6 +860,7 @@ export class SudojoClient {
       autopencilmarks: options.autoPencilmarks,
       pencilmarks: options.pencilmarks,
       filters: options.filters,
+      techniques: options.techniques,
     });
 
     const fullUrl = `${this.baseUrl}${url}`;
