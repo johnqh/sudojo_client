@@ -244,7 +244,7 @@ describe("SudojoClient", () => {
       expect(result.data).toHaveLength(1);
     });
 
-    it("should filter techniques by level_uuid", async () => {
+    it("should filter techniques by level", async () => {
       const mockResponse = {
         success: true,
         data: [],
@@ -252,13 +252,13 @@ describe("SudojoClient", () => {
       };
 
       mockNetworkClient.setMockResponse(
-        `${BASE_URL}/api/v1/techniques?level_uuid=${VALID_UUID}`,
+        `${BASE_URL}/api/v1/techniques?level=1`,
         { data: mockResponse },
         "GET",
       );
 
       const result = await client.getTechniques(TEST_TOKEN, {
-        level_uuid: VALID_UUID,
+        level: 1,
       });
 
       expect(result.success).toBe(true);
@@ -328,7 +328,7 @@ describe("SudojoClient", () => {
       expect(result.data).toHaveLength(1);
     });
 
-    it("should filter learning by technique_uuid and language", async () => {
+    it("should filter learning by technique and language", async () => {
       const mockResponse = {
         success: true,
         data: [],
@@ -336,13 +336,13 @@ describe("SudojoClient", () => {
       };
 
       mockNetworkClient.setMockResponse(
-        `${BASE_URL}/api/v1/learning?technique_uuid=${VALID_UUID}&language_code=en`,
+        `${BASE_URL}/api/v1/learning?technique=1&language_code=en`,
         { data: mockResponse },
         "GET",
       );
 
       const result = await client.getLearning(TEST_TOKEN, {
-        technique_uuid: VALID_UUID,
+        technique: 1,
         language_code: "en",
       });
 
@@ -564,7 +564,7 @@ describe("SudojoClient", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should filter challenges by level_uuid and difficulty", async () => {
+    it("should filter challenges by level and difficulty", async () => {
       const mockResponse = {
         success: true,
         data: [],
@@ -572,14 +572,14 @@ describe("SudojoClient", () => {
       };
 
       mockNetworkClient.setMockResponse(
-        `${BASE_URL}/api/v1/challenges?level_uuid=${VALID_UUID}&difficulty=5`,
+        `${BASE_URL}/api/v1/challenges?level=1&difficulty=5`,
         { data: mockResponse },
         "GET",
       );
 
       const result = await client.getChallenges(TEST_TOKEN, {
-        level_uuid: VALID_UUID,
-        difficulty: "5",
+        level: 1,
+        difficulty: 5,
       });
 
       expect(result.success).toBe(true);

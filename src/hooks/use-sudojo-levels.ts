@@ -56,13 +56,13 @@ export const useSudojoLevels = (
 };
 
 /**
- * Hook to get a specific level by UUID
+ * Hook to get a specific level by level number (1-12)
  */
 export const useSudojoLevel = (
   networkClient: NetworkClient,
   baseUrl: string,
   token: string,
-  uuid: string,
+  level: number,
   options?: Omit<UseQueryOptions<BaseResponse<Level>>, "queryKey" | "queryFn">,
 ): UseQueryResult<BaseResponse<Level>> => {
   const client = useMemo(
@@ -71,15 +71,17 @@ export const useSudojoLevel = (
   );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Level>> => {
-    return client.getLevel(token, uuid);
-  }, [client, token, uuid]);
+    return client.getLevel(token, level);
+  }, [client, token, level]);
 
-  // Public endpoint - no token required, but uuid is required
+  // Public endpoint - no token required, but level is required
   const isEnabled =
-    !!uuid && (options?.enabled !== undefined ? options.enabled : true);
+    level >= 1 &&
+    level <= 12 &&
+    (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
-    queryKey: queryKeys.sudojo.level(uuid),
+    queryKey: queryKeys.sudojo.level(level),
     queryFn,
     staleTime: STALE_TIMES.LEVELS,
     ...options,
@@ -129,7 +131,7 @@ export const useSudojoUpdateLevel = (
 ): UseMutationResult<
   BaseResponse<Level>,
   Error,
-  { token: string; uuid: string; data: LevelUpdateRequest }
+  { token: string; level: number; data: LevelUpdateRequest }
 > => {
   const client = useMemo(
     () => new SudojoClient(networkClient, baseUrl),
@@ -140,19 +142,19 @@ export const useSudojoUpdateLevel = (
   return useMutation({
     mutationFn: async ({
       token,
-      uuid,
+      level,
       data,
     }: {
       token: string;
-      uuid: string;
+      level: number;
       data: LevelUpdateRequest;
     }) => {
-      return client.updateLevel(token, uuid, data);
+      return client.updateLevel(token, level, data);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sudojo.levels() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.sudojo.level(variables.uuid),
+        queryKey: queryKeys.sudojo.level(variables.level),
       });
     },
   });
@@ -167,7 +169,7 @@ export const useSudojoDeleteLevel = (
 ): UseMutationResult<
   BaseResponse<Level>,
   Error,
-  { token: string; uuid: string }
+  { token: string; level: number }
 > => {
   const client = useMemo(
     () => new SudojoClient(networkClient, baseUrl),
@@ -176,13 +178,13 @@ export const useSudojoDeleteLevel = (
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ token, uuid }: { token: string; uuid: string }) => {
-      return client.deleteLevel(token, uuid);
+    mutationFn: async ({ token, level }: { token: string; level: number }) => {
+      return client.deleteLevel(token, level);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.sudojo.levels() });
       queryClient.removeQueries({
-        queryKey: queryKeys.sudojo.level(variables.uuid),
+        queryKey: queryKeys.sudojo.level(variables.level),
       });
     },
   });

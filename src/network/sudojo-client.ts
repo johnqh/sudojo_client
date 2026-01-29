@@ -135,11 +135,11 @@ const createApiConfig = (baseUrl: string) => ({
 
     // Levels
     LEVELS: "/api/v1/levels",
-    LEVEL: (uuid: string) => `/api/v1/levels/${uuid}`,
+    LEVEL: (level: number) => `/api/v1/levels/${level}`,
 
     // Techniques
     TECHNIQUES: "/api/v1/techniques",
-    TECHNIQUE: (uuid: string) => `/api/v1/techniques/${uuid}`,
+    TECHNIQUE: (technique: number) => `/api/v1/techniques/${technique}`,
 
     // Learning
     LEARNING: "/api/v1/learning",
@@ -174,8 +174,8 @@ const createApiConfig = (baseUrl: string) => ({
     // Practices
     PRACTICES: "/api/v1/practices",
     PRACTICES_COUNTS: "/api/v1/practices/counts",
-    PRACTICE_RANDOM: (techniqueUuid: string) =>
-      `/api/v1/practices/technique/${techniqueUuid}/random`,
+    PRACTICE_RANDOM: (technique: number) =>
+      `/api/v1/practices/technique/${technique}/random`,
   },
   DEFAULT_HEADERS: {
     "Content-Type": "application/json",
@@ -276,10 +276,12 @@ export class SudojoClient {
     });
   }
 
-  async getLevel(token: string, uuid: string): Promise<BaseResponse<Level>> {
-    const validatedUuid = validateUUID(uuid, "Level UUID");
+  async getLevel(token: string, level: number): Promise<BaseResponse<Level>> {
+    if (level < 1 || level > 12) {
+      throw new Error(`Invalid level: ${level}. Expected 1-12`);
+    }
     return this.request<BaseResponse<Level>>(
-      this.config.ENDPOINTS.LEVEL(validatedUuid),
+      this.config.ENDPOINTS.LEVEL(level),
       { token },
     );
   }
@@ -297,12 +299,14 @@ export class SudojoClient {
 
   async updateLevel(
     token: string,
-    uuid: string,
+    level: number,
     data: LevelUpdateRequest,
   ): Promise<BaseResponse<Level>> {
-    const validatedUuid = validateUUID(uuid, "Level UUID");
+    if (level < 1 || level > 12) {
+      throw new Error(`Invalid level: ${level}. Expected 1-12`);
+    }
     return this.request<BaseResponse<Level>>(
-      this.config.ENDPOINTS.LEVEL(validatedUuid),
+      this.config.ENDPOINTS.LEVEL(level),
       {
         method: "PUT",
         body: data as unknown as Record<string, unknown>,
@@ -311,10 +315,15 @@ export class SudojoClient {
     );
   }
 
-  async deleteLevel(token: string, uuid: string): Promise<BaseResponse<Level>> {
-    const validatedUuid = validateUUID(uuid, "Level UUID");
+  async deleteLevel(
+    token: string,
+    level: number,
+  ): Promise<BaseResponse<Level>> {
+    if (level < 1 || level > 12) {
+      throw new Error(`Invalid level: ${level}. Expected 1-12`);
+    }
     return this.request<BaseResponse<Level>>(
-      this.config.ENDPOINTS.LEVEL(validatedUuid),
+      this.config.ENDPOINTS.LEVEL(level),
       {
         method: "DELETE",
         token,
@@ -332,8 +341,8 @@ export class SudojoClient {
   ): Promise<BaseResponse<Technique[]>> {
     const params = createURLSearchParams();
 
-    if (queryParams?.level_uuid) {
-      params.append("level_uuid", queryParams.level_uuid);
+    if (queryParams?.level !== undefined) {
+      params.append("level", String(queryParams.level));
     }
 
     const query = params.toString();
@@ -344,11 +353,13 @@ export class SudojoClient {
 
   async getTechnique(
     token: string,
-    uuid: string,
+    technique: number,
   ): Promise<BaseResponse<Technique>> {
-    const validatedUuid = validateUUID(uuid, "Technique UUID");
+    if (technique < 1 || technique > 37) {
+      throw new Error(`Invalid technique: ${technique}. Expected 1-37`);
+    }
     return this.request<BaseResponse<Technique>>(
-      this.config.ENDPOINTS.TECHNIQUE(validatedUuid),
+      this.config.ENDPOINTS.TECHNIQUE(technique),
       { token },
     );
   }
@@ -369,12 +380,14 @@ export class SudojoClient {
 
   async updateTechnique(
     token: string,
-    uuid: string,
+    technique: number,
     data: TechniqueUpdateRequest,
   ): Promise<BaseResponse<Technique>> {
-    const validatedUuid = validateUUID(uuid, "Technique UUID");
+    if (technique < 1 || technique > 37) {
+      throw new Error(`Invalid technique: ${technique}. Expected 1-37`);
+    }
     return this.request<BaseResponse<Technique>>(
-      this.config.ENDPOINTS.TECHNIQUE(validatedUuid),
+      this.config.ENDPOINTS.TECHNIQUE(technique),
       {
         method: "PUT",
         body: data as unknown as Record<string, unknown>,
@@ -385,11 +398,13 @@ export class SudojoClient {
 
   async deleteTechnique(
     token: string,
-    uuid: string,
+    technique: number,
   ): Promise<BaseResponse<Technique>> {
-    const validatedUuid = validateUUID(uuid, "Technique UUID");
+    if (technique < 1 || technique > 37) {
+      throw new Error(`Invalid technique: ${technique}. Expected 1-37`);
+    }
     return this.request<BaseResponse<Technique>>(
-      this.config.ENDPOINTS.TECHNIQUE(validatedUuid),
+      this.config.ENDPOINTS.TECHNIQUE(technique),
       {
         method: "DELETE",
         token,
@@ -407,8 +422,8 @@ export class SudojoClient {
   ): Promise<BaseResponse<Learning[]>> {
     const params = createURLSearchParams();
 
-    if (queryParams?.technique_uuid) {
-      params.append("technique_uuid", queryParams.technique_uuid);
+    if (queryParams?.technique !== undefined) {
+      params.append("technique", String(queryParams.technique));
     }
     if (queryParams?.language_code) {
       params.append("language_code", queryParams.language_code);
@@ -485,8 +500,8 @@ export class SudojoClient {
   ): Promise<BaseResponse<Board[]>> {
     const params = createURLSearchParams();
 
-    if (queryParams?.level_uuid) {
-      params.append("level_uuid", queryParams.level_uuid);
+    if (queryParams?.level !== undefined) {
+      params.append("level", String(queryParams.level));
     }
 
     const query = params.toString();
@@ -501,8 +516,8 @@ export class SudojoClient {
   ): Promise<BaseResponse<Board>> {
     const params = createURLSearchParams();
 
-    if (queryParams?.level_uuid) {
-      params.append("level_uuid", queryParams.level_uuid);
+    if (queryParams?.level !== undefined) {
+      params.append("level", String(queryParams.level));
     }
 
     const query = params.toString();
@@ -653,8 +668,8 @@ export class SudojoClient {
   ): Promise<BaseResponse<Challenge[]>> {
     const params = createURLSearchParams();
 
-    if (queryParams?.level_uuid) {
-      params.append("level_uuid", queryParams.level_uuid);
+    if (queryParams?.level !== undefined) {
+      params.append("level", String(queryParams.level));
     }
     if (queryParams?.difficulty) {
       params.append("difficulty", queryParams.difficulty);
@@ -672,8 +687,8 @@ export class SudojoClient {
   ): Promise<BaseResponse<Challenge>> {
     const params = createURLSearchParams();
 
-    if (queryParams?.level_uuid) {
-      params.append("level_uuid", queryParams.level_uuid);
+    if (queryParams?.level !== undefined) {
+      params.append("level", String(queryParams.level));
     }
     if (queryParams?.difficulty) {
       params.append("difficulty", queryParams.difficulty);
@@ -780,11 +795,13 @@ export class SudojoClient {
    */
   async getRandomPractice(
     token: string,
-    techniqueUuid: string,
+    technique: number,
   ): Promise<BaseResponse<TechniquePractice>> {
-    const validatedUuid = validateUUID(techniqueUuid, "Technique UUID");
+    if (technique < 1 || technique > 37) {
+      throw new Error(`Invalid technique: ${technique}. Expected 1-37`);
+    }
     return this.request<BaseResponse<TechniquePractice>>(
-      this.config.ENDPOINTS.PRACTICE_RANDOM(validatedUuid),
+      this.config.ENDPOINTS.PRACTICE_RANDOM(technique),
       { token },
     );
   }

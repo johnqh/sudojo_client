@@ -62,7 +62,7 @@ export const useSudojoRandomPractice = (
   networkClient: NetworkClient,
   baseUrl: string,
   token: string,
-  techniqueUuid: string,
+  technique: number,
   options?: Omit<
     UseQueryOptions<BaseResponse<TechniquePractice>>,
     "queryKey" | "queryFn"
@@ -76,15 +76,16 @@ export const useSudojoRandomPractice = (
   const queryFn = useCallback(async (): Promise<
     BaseResponse<TechniquePractice>
   > => {
-    return client.getRandomPractice(token, techniqueUuid);
-  }, [client, token, techniqueUuid]);
+    return client.getRandomPractice(token, technique);
+  }, [client, token, technique]);
 
   const isEnabled =
-    !!techniqueUuid &&
+    technique >= 1 &&
+    technique <= 37 &&
     (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
-    queryKey: queryKeys.sudojo.practiceRandom(techniqueUuid),
+    queryKey: queryKeys.sudojo.practiceRandom(technique),
     queryFn,
     staleTime: 0, // Always fetch fresh for random
     ...options,

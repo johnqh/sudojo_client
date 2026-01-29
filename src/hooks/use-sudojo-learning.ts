@@ -50,7 +50,7 @@ export const useSudojoLearning = (
 
   return useQuery({
     queryKey: queryKeys.sudojo.learning({
-      technique_uuid: queryParams?.technique_uuid ?? undefined,
+      technique: queryParams?.technique ?? undefined,
       language_code: queryParams?.language_code ?? undefined,
     }),
     queryFn,

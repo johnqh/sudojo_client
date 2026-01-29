@@ -50,7 +50,7 @@ export const useSudojoChallenges = (
 
   return useQuery({
     queryKey: queryKeys.sudojo.challenges({
-      level_uuid: queryParams?.level_uuid ?? undefined,
+      level: queryParams?.level ?? undefined,
       difficulty: queryParams?.difficulty ?? undefined,
     }),
     queryFn,
@@ -87,7 +87,7 @@ export const useSudojoRandomChallenge = (
 
   return useQuery({
     queryKey: queryKeys.sudojo.challengeRandom({
-      level_uuid: queryParams?.level_uuid ?? undefined,
+      level: queryParams?.level ?? undefined,
       difficulty: queryParams?.difficulty ?? undefined,
     }),
     queryFn,

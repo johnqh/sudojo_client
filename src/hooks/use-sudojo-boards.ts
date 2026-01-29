@@ -43,21 +43,18 @@ export const useSudojoBoards = (
   );
 
   // Extract values for stable dependencies
-  const levelUuid = queryParams?.level_uuid;
+  const level = queryParams?.level;
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Board[]>> => {
-    return client.getBoards(
-      token,
-      levelUuid ? { level_uuid: levelUuid } : undefined,
-    );
-  }, [client, token, levelUuid]);
+    return client.getBoards(token, level ? { level } : undefined);
+  }, [client, token, level]);
 
   // Public endpoint - no token required
   const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
     queryKey: queryKeys.sudojo.boards({
-      level_uuid: levelUuid ?? undefined,
+      level: level ?? undefined,
     }),
     queryFn,
     staleTime: STALE_TIMES.BOARDS,
@@ -83,21 +80,18 @@ export const useSudojoRandomBoard = (
   );
 
   // Extract values for stable dependencies
-  const levelUuid = queryParams?.level_uuid;
+  const level = queryParams?.level;
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Board>> => {
-    return client.getRandomBoard(
-      token,
-      levelUuid ? { level_uuid: levelUuid } : undefined,
-    );
-  }, [client, token, levelUuid]);
+    return client.getRandomBoard(token, level ? { level } : undefined);
+  }, [client, token, level]);
 
   // Public endpoint - no token required
   const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
     queryKey: queryKeys.sudojo.boardRandom({
-      level_uuid: levelUuid ?? undefined,
+      level: level ?? undefined,
     }),
     queryFn,
     staleTime: 0, // Always fetch fresh for random

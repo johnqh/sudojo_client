@@ -16,25 +16,26 @@ export const queryKeys = {
 
     // Levels
     levels: () => [...sudojoBase(), "levels"] as const,
-    level: (uuid: string) => [...sudojoBase(), "levels", uuid] as const,
+    level: (level: number) => [...sudojoBase(), "levels", level] as const,
 
     // Techniques
-    techniques: (filters?: { level_uuid?: string | undefined }) =>
+    techniques: (filters?: { level?: number | undefined }) =>
       [...sudojoBase(), "techniques", filters] as const,
-    technique: (uuid: string) => [...sudojoBase(), "techniques", uuid] as const,
+    technique: (technique: number) =>
+      [...sudojoBase(), "techniques", technique] as const,
 
     // Learning
     learning: (filters?: {
-      technique_uuid?: string | undefined;
+      technique?: number | undefined;
       language_code?: string | undefined;
     }) => [...sudojoBase(), "learning", filters] as const,
     learningItem: (uuid: string) =>
       [...sudojoBase(), "learning", uuid] as const,
 
     // Boards
-    boards: (filters?: { level_uuid?: string | undefined }) =>
+    boards: (filters?: { level?: number | undefined }) =>
       [...sudojoBase(), "boards", filters] as const,
-    boardRandom: (filters?: { level_uuid?: string | undefined }) =>
+    boardRandom: (filters?: { level?: number | undefined }) =>
       [...sudojoBase(), "boards", "random", filters] as const,
     board: (uuid: string) => [...sudojoBase(), "boards", uuid] as const,
 
@@ -48,11 +49,11 @@ export const queryKeys = {
 
     // Challenges
     challenges: (filters?: {
-      level_uuid?: string | undefined;
+      level?: number | undefined;
       difficulty?: string | undefined;
     }) => [...sudojoBase(), "challenges", filters] as const,
     challengeRandom: (filters?: {
-      level_uuid?: string | undefined;
+      level?: number | undefined;
       difficulty?: string | undefined;
     }) => [...sudojoBase(), "challenges", "random", filters] as const,
     challenge: (uuid: string) => [...sudojoBase(), "challenges", uuid] as const,
@@ -63,8 +64,8 @@ export const queryKeys = {
 
     // Practices
     practiceCounts: () => [...sudojoBase(), "practices", "counts"] as const,
-    practiceRandom: (techniqueUuid: string) =>
-      [...sudojoBase(), "practices", "random", techniqueUuid] as const,
+    practiceRandom: (technique: number) =>
+      [...sudojoBase(), "practices", "random", technique] as const,
   },
 } as const;
 
