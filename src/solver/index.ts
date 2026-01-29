@@ -10,7 +10,7 @@ export {
 
 // Re-export solver types from shared package
 export type {
-  SolverPencilmarks,
+  SolverPencilmark,
   SolverBoard,
   SolverAreaType,
   SolverColor,
@@ -18,8 +18,10 @@ export type {
   SolverCellActions,
   SolverHintCell,
   SolverHintStep,
+  SolverHints,
   SolveData,
   ValidateData,
   GenerateData,
+  ValidateBoardData,
   BaseResponse,
 } from "@sudobility/sudojo_types";
