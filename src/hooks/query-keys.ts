@@ -68,7 +68,8 @@ export const queryKeys = {
       [...sudojoBase(), "practices", "random", technique] as const,
 
     // Gamification
-    gamificationStats: () => [...sudojoBase(), "gamification", "stats"] as const,
+    gamificationStats: () =>
+      [...sudojoBase(), "gamification", "stats"] as const,
     gamificationBadges: () =>
       [...sudojoBase(), "gamification", "badges"] as const,
     gamificationHistory: (options?: { limit?: number; offset?: number }) =>
