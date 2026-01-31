@@ -2,6 +2,7 @@ import type { NetworkClient } from "@sudobility/types";
 import type {
   BaseResponse,
   Board,
+  BoardCountsData,
   BoardCreateRequest,
   BoardQueryParams,
   BoardUpdateRequest,
@@ -12,6 +13,7 @@ import type {
   Daily,
   DailyCreateRequest,
   DailyUpdateRequest,
+  ExampleCountsData,
   GenerateData,
   HealthCheckData,
   HintAccessDeniedResponse,
@@ -27,6 +29,9 @@ import type {
   SubscriptionResult,
   Technique,
   TechniqueCreateRequest,
+  TechniqueExample,
+  TechniqueExampleCreateRequest,
+  TechniqueExampleQueryParams,
   TechniquePractice,
   TechniquePracticeCountItem,
   TechniquePracticeCreateRequest,
@@ -176,6 +181,13 @@ const createApiConfig = (baseUrl: string) => ({
     PRACTICES_COUNTS: "/api/v1/practices/counts",
     PRACTICE_RANDOM: (technique: number) =>
       `/api/v1/practices/technique/${technique}/random`,
+
+    // Examples
+    EXAMPLES: "/api/v1/examples",
+    EXAMPLES_COUNTS: "/api/v1/examples/counts",
+
+    // Boards counts
+    BOARDS_COUNTS: "/api/v1/boards/counts",
   },
   DEFAULT_HEADERS: {
     "Content-Type": "application/json",
@@ -502,6 +514,15 @@ export class SudojoClient {
 
     if (queryParams?.level !== undefined) {
       params.append("level", String(queryParams.level));
+    }
+    if (queryParams?.limit !== undefined) {
+      params.append("limit", String(queryParams.limit));
+    }
+    if (queryParams?.offset !== undefined) {
+      params.append("offset", String(queryParams.offset));
+    }
+    if (queryParams?.techniques !== undefined) {
+      params.append("techniques", String(queryParams.techniques));
     }
 
     const query = params.toString();
@@ -835,6 +856,70 @@ export class SudojoClient {
         method: "DELETE",
         token,
       },
+    );
+  }
+
+  // ===========================================================================
+  // Examples
+  // ===========================================================================
+
+  /**
+   * Get example counts for all techniques
+   */
+  async getExampleCounts(token: string): Promise<BaseResponse<ExampleCountsData>> {
+    return this.request<BaseResponse<ExampleCountsData>>(
+      this.config.ENDPOINTS.EXAMPLES_COUNTS,
+      { token },
+    );
+  }
+
+  /**
+   * Get examples, optionally filtered by technique
+   */
+  async getExamples(
+    token: string,
+    queryParams?: TechniqueExampleQueryParams,
+  ): Promise<BaseResponse<TechniqueExample[]>> {
+    const params = createURLSearchParams();
+
+    if (queryParams?.technique !== undefined) {
+      params.append("technique", String(queryParams.technique));
+    }
+
+    const query = params.toString();
+    const endpoint = `${this.config.ENDPOINTS.EXAMPLES}${query ? `?${query}` : ""}`;
+
+    return this.request<BaseResponse<TechniqueExample[]>>(endpoint, { token });
+  }
+
+  /**
+   * Create a new example (admin only)
+   */
+  async createExample(
+    token: string,
+    data: TechniqueExampleCreateRequest,
+  ): Promise<BaseResponse<TechniqueExample>> {
+    return this.request<BaseResponse<TechniqueExample>>(
+      this.config.ENDPOINTS.EXAMPLES,
+      {
+        method: "POST",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  // ===========================================================================
+  // Board Counts
+  // ===========================================================================
+
+  /**
+   * Get board counts (total and without techniques)
+   */
+  async getBoardCounts(token: string): Promise<BaseResponse<BoardCountsData>> {
+    return this.request<BaseResponse<BoardCountsData>>(
+      this.config.ENDPOINTS.BOARDS_COUNTS,
+      { token },
     );
   }
 

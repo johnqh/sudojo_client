@@ -46,7 +46,12 @@ export const useSudojoBoards = (
   const level = queryParams?.level;
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Board[]>> => {
-    return client.getBoards(token, level ? { level } : undefined);
+    return client.getBoards(
+      token,
+      level !== undefined
+        ? { level, limit: undefined, offset: undefined, techniques: undefined }
+        : undefined,
+    );
   }, [client, token, level]);
 
   // Public endpoint - no token required
@@ -83,7 +88,12 @@ export const useSudojoRandomBoard = (
   const level = queryParams?.level;
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Board>> => {
-    return client.getRandomBoard(token, level ? { level } : undefined);
+    return client.getRandomBoard(
+      token,
+      level !== undefined
+        ? { level, limit: undefined, offset: undefined, techniques: undefined }
+        : undefined,
+    );
   }, [client, token, level]);
 
   // Public endpoint - no token required
