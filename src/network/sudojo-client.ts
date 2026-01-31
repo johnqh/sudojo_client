@@ -866,7 +866,9 @@ export class SudojoClient {
   /**
    * Get example counts for all techniques
    */
-  async getExampleCounts(token: string): Promise<BaseResponse<ExampleCountsData>> {
+  async getExampleCounts(
+    token: string,
+  ): Promise<BaseResponse<ExampleCountsData>> {
     return this.request<BaseResponse<ExampleCountsData>>(
       this.config.ENDPOINTS.EXAMPLES_COUNTS,
       { token },
