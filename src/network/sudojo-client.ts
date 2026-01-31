@@ -1,5 +1,6 @@
 import type { NetworkClient } from "@sudobility/types";
 import {
+  type BadgeDefinition,
   type BaseResponse,
   type Board,
   type BoardCountsData,
@@ -14,6 +15,11 @@ import {
   type DailyCreateRequest,
   type DailyUpdateRequest,
   type ExampleCountsData,
+  type GameFinishRequest,
+  type GameFinishResponse,
+  type GameStartRequest,
+  type GameStartResponse,
+  type GamificationStats,
   type GenerateData,
   type GenerateOptions,
   type HealthCheckData,
@@ -27,6 +33,7 @@ import {
   type LevelCreateRequest,
   type LevelUpdateRequest,
   type Optional,
+  type PointTransaction,
   type SolveData,
   type SolveOptions,
   type SubscriptionResult,
@@ -136,6 +143,15 @@ const createApiConfig = (baseUrl: string) => ({
 
     // Boards counts
     BOARDS_COUNTS: "/api/v1/boards/counts",
+
+    // Play (game sessions)
+    PLAY_START: "/api/v1/play/start",
+    PLAY_FINISH: "/api/v1/play/finish",
+
+    // Gamification
+    GAMIFICATION_STATS: "/api/v1/gamification/stats",
+    GAMIFICATION_BADGES: "/api/v1/gamification/badges",
+    GAMIFICATION_HISTORY: "/api/v1/gamification/history",
   },
   DEFAULT_HEADERS: {
     "Content-Type": "application/json",
@@ -931,25 +947,11 @@ export class SudojoClient {
       requestHeaders["Authorization"] = `Bearer ${token}`;
     }
 
-    console.log(
-      "[solverSolve] Making request to:",
-      `${fullUrl.substring(0, 100)}...`,
-    );
-
     const response = await this.networkClient.request<
       BaseResponse<SolveData> | HintAccessDeniedResponse
     >(fullUrl, {
       method: "GET",
       headers: requestHeaders,
-    });
-
-    // Debug: Log response details
-    console.log("[solverSolve] Response received:", {
-      ok: response.ok,
-      status: response.status,
-      hasData: response.data !== undefined,
-      dataType: typeof response.data,
-      dataKeys: response.data ? Object.keys(response.data) : [],
     });
 
     // Check for hint access denied (402)
@@ -962,10 +964,6 @@ export class SudojoClient {
 
     // Check for other errors
     if (!response.ok || response.data === undefined) {
-      console.error("[solverSolve] Error condition met:", {
-        ok: response.ok,
-        dataIsUndefined: response.data === undefined,
-      });
       throw new Error("Failed to get hints from solver");
     }
 
@@ -1003,6 +1001,86 @@ export class SudojoClient {
     });
 
     return this.request<BaseResponse<GenerateData>>(url, { token });
+  }
+
+  // ===========================================================================
+  // Play (Game Session) Endpoints
+  // ===========================================================================
+
+  /**
+   * Start a new game session
+   */
+  async playStart(
+    token: string,
+    data: GameStartRequest,
+  ): Promise<BaseResponse<GameStartResponse>> {
+    return this.request<BaseResponse<GameStartResponse>>(
+      this.config.ENDPOINTS.PLAY_START,
+      {
+        method: "POST",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  /**
+   * Finish the current game session and get rewards
+   */
+  async playFinish(
+    token: string,
+    data: GameFinishRequest,
+  ): Promise<BaseResponse<GameFinishResponse>> {
+    return this.request<BaseResponse<GameFinishResponse>>(
+      this.config.ENDPOINTS.PLAY_FINISH,
+      {
+        method: "POST",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  // ===========================================================================
+  // Gamification Endpoints
+  // ===========================================================================
+
+  /**
+   * Get user's gamification stats (points, level, badges)
+   */
+  async getGamificationStats(
+    token: string,
+  ): Promise<BaseResponse<GamificationStats>> {
+    return this.request<BaseResponse<GamificationStats>>(
+      this.config.ENDPOINTS.GAMIFICATION_STATS,
+      { token },
+    );
+  }
+
+  /**
+   * Get all badge definitions (public)
+   */
+  async getBadgeDefinitions(): Promise<BaseResponse<BadgeDefinition[]>> {
+    return this.request<BaseResponse<BadgeDefinition[]>>(
+      this.config.ENDPOINTS.GAMIFICATION_BADGES,
+    );
+  }
+
+  /**
+   * Get user's point transaction history
+   */
+  async getPointHistory(
+    token: string,
+    options?: { limit?: number; offset?: number },
+  ): Promise<BaseResponse<PointTransaction[]>> {
+    let endpoint = this.config.ENDPOINTS.GAMIFICATION_HISTORY;
+    if (options?.limit || options?.offset) {
+      const params = new URLSearchParams();
+      if (options.limit) params.set("limit", String(options.limit));
+      if (options.offset) params.set("offset", String(options.offset));
+      endpoint = `${endpoint}?${params.toString()}`;
+    }
+    return this.request<BaseResponse<PointTransaction[]>>(endpoint, { token });
   }
 }
 

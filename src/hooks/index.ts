@@ -109,3 +109,15 @@ export {
   useSudojoPracticeCounts,
   useSudojoRandomPractice,
 } from "./use-sudojo-practices";
+
+// ============================================================================
+// Gamification hooks (points, badges, levels, game sessions)
+// ============================================================================
+
+export {
+  useSudojoBadgeDefinitions,
+  useSudojoGamificationStats,
+  useSudojoPlayFinish,
+  useSudojoPlayStart,
+  useSudojoPointHistory,
+} from "./use-sudojo-gamification";

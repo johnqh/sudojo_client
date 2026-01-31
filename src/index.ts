@@ -62,6 +62,17 @@ export {
   useSudojoUpdateChallenge,
   // Users
   useSudojoUserSubscription,
+  // Practices
+  useSudojoCreatePractice,
+  useSudojoDeleteAllPractices,
+  useSudojoPracticeCounts,
+  useSudojoRandomPractice,
+  // Gamification
+  useSudojoBadgeDefinitions,
+  useSudojoGamificationStats,
+  useSudojoPlayFinish,
+  useSudojoPlayStart,
+  useSudojoPointHistory,
 } from "./hooks";
 export type { QueryKey } from "./hooks";
 
