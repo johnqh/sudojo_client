@@ -179,6 +179,7 @@ export class SudojoClient {
       body?: Optional<Record<string, unknown>>;
       headers?: Optional<Record<string, string>>;
       token?: Optional<string>;
+      timeout?: Optional<number>;
     } = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
@@ -197,6 +198,7 @@ export class SudojoClient {
       method: "GET" | "POST" | "PUT" | "DELETE";
       headers: Record<string, string>;
       body?: string;
+      timeout?: number;
     } = {
       method: options.method || "GET",
       headers: requestHeaders,
@@ -205,6 +207,11 @@ export class SudojoClient {
     // Add body for POST/PUT/DELETE requests
     if (options.body && options.method !== "GET") {
       requestOptions.body = JSON.stringify(options.body);
+    }
+
+    // Add timeout if specified
+    if (options.timeout) {
+      requestOptions.timeout = options.timeout;
     }
 
     const response = await this.networkClient.request<T>(url, requestOptions);
@@ -966,7 +973,8 @@ export class SudojoClient {
   }
 
   /**
-   * Validate that a Sudoku puzzle has a unique solution
+   * Validate that a Sudoku puzzle has a unique solution.
+   * Uses a longer timeout (120s) because validation involves iterative solving.
    */
   async solverValidate(
     token: string,
@@ -976,7 +984,8 @@ export class SudojoClient {
       original: options.original,
     });
 
-    return this.request<BaseResponse<ValidateData>>(url, { token });
+    // Use 120 second timeout for validation (iterative solving can be slow)
+    return this.request<BaseResponse<ValidateData>>(url, { token, timeout: 120000 });
   }
 
   /**
