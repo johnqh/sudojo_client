@@ -1,83 +1,53 @@
 import type { NetworkClient } from "@sudobility/types";
-import type {
-  BaseResponse,
-  Board,
-  BoardCountsData,
-  BoardCreateRequest,
-  BoardQueryParams,
-  BoardUpdateRequest,
-  Challenge,
-  ChallengeCreateRequest,
-  ChallengeQueryParams,
-  ChallengeUpdateRequest,
-  Daily,
-  DailyCreateRequest,
-  DailyUpdateRequest,
-  ExampleCountsData,
-  GenerateData,
-  HealthCheckData,
-  HintAccessDeniedResponse,
-  Learning,
-  LearningCreateRequest,
-  LearningQueryParams,
-  LearningUpdateRequest,
-  Level,
-  LevelCreateRequest,
-  LevelUpdateRequest,
-  Optional,
-  SolveData,
-  SubscriptionResult,
-  Technique,
-  TechniqueCreateRequest,
-  TechniqueExample,
-  TechniqueExampleCreateRequest,
-  TechniqueExampleQueryParams,
-  TechniquePractice,
-  TechniquePracticeCountItem,
-  TechniquePracticeCreateRequest,
-  TechniqueQueryParams,
-  TechniqueUpdateRequest,
-  ValidateData,
+import {
+  isValidUUID,
+  validateUUID,
+  type BaseResponse,
+  type Board,
+  type BoardCountsData,
+  type BoardCreateRequest,
+  type BoardQueryParams,
+  type BoardUpdateRequest,
+  type Challenge,
+  type ChallengeCreateRequest,
+  type ChallengeQueryParams,
+  type ChallengeUpdateRequest,
+  type Daily,
+  type DailyCreateRequest,
+  type DailyUpdateRequest,
+  type ExampleCountsData,
+  type GenerateData,
+  type GenerateOptions,
+  type HealthCheckData,
+  type HintAccessDeniedResponse,
+  type Learning,
+  type LearningCreateRequest,
+  type LearningQueryParams,
+  type LearningUpdateRequest,
+  type Level,
+  type LevelCreateRequest,
+  type LevelUpdateRequest,
+  type Optional,
+  type SolveData,
+  type SolveOptions,
+  type SubscriptionResult,
+  type Technique,
+  type TechniqueCreateRequest,
+  type TechniqueExample,
+  type TechniqueExampleCreateRequest,
+  type TechniqueExampleQueryParams,
+  type TechniquePractice,
+  type TechniquePracticeCountItem,
+  type TechniquePracticeCreateRequest,
+  type TechniqueQueryParams,
+  type TechniqueUpdateRequest,
+  type ValidateData,
+  type ValidateOptions,
 } from "@sudobility/sudojo_types";
 import { HintAccessDeniedError } from "../errors";
 
-// =============================================================================
-// Solver Option Types
-// =============================================================================
-
-/**
- * Options for the solve API call
- */
-export interface SolveOptions {
-  /** 81-character puzzle string */
-  original: string;
-  /** 81-character user input string */
-  user: string;
-  /** Whether auto-pencilmarks are enabled */
-  autoPencilmarks?: boolean;
-  /** Comma-separated pencilmarks string */
-  pencilmarks?: string;
-  /** Optional technique filters */
-  filters?: string;
-  /** Optional comma-delimited list of technique numbers to filter solving (e.g., "1,2,3") */
-  techniques?: string;
-}
-
-/**
- * Options for the validate API call
- */
-export interface ValidateOptions {
-  /** 81-character puzzle string */
-  original: string;
-}
-
-/**
- * Options for the generate API call
- */
-export interface GenerateOptions {
-  /** Whether to generate a symmetrical puzzle */
-  symmetrical?: boolean;
-}
+// Re-export option types for convenience
+export type { SolveOptions, ValidateOptions, GenerateOptions };
 
 // =============================================================================
 // URL Search Params Utility
@@ -104,28 +74,6 @@ const createURLSearchParams = () => {
         .join("&");
     },
   };
-};
-
-// =============================================================================
-// UUID Validation
-// =============================================================================
-
-const isValidUUID = (id: string): boolean => {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    id,
-  );
-};
-
-const validateUUID = (uuid: string, name: string = "UUID"): string => {
-  if (!uuid) {
-    throw new Error(`${name} is required`);
-  }
-  if (!isValidUUID(uuid)) {
-    throw new Error(
-      `Invalid ${name} format: "${uuid}". Expected UUID format (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)`,
-    );
-  }
-  return uuid;
 };
 
 // =============================================================================
