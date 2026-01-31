@@ -1,7 +1,5 @@
 import type { NetworkClient } from "@sudobility/types";
 import {
-  isValidUUID,
-  validateUUID,
   type BaseResponse,
   type Board,
   type BoardCountsData,
@@ -20,6 +18,7 @@ import {
   type GenerateOptions,
   type HealthCheckData,
   type HintAccessDeniedResponse,
+  isValidUUID,
   type Learning,
   type LearningCreateRequest,
   type LearningQueryParams,
@@ -43,6 +42,7 @@ import {
   type TechniqueUpdateRequest,
   type ValidateData,
   type ValidateOptions,
+  validateUUID,
 } from "@sudobility/sudojo_types";
 import { HintAccessDeniedError } from "../errors";
 
@@ -985,7 +985,10 @@ export class SudojoClient {
     });
 
     // Use 120 second timeout for validation (iterative solving can be slow)
-    return this.request<BaseResponse<ValidateData>>(url, { token, timeout: 120000 });
+    return this.request<BaseResponse<ValidateData>>(url, {
+      token,
+      timeout: 120000,
+    });
   }
 
   /**
