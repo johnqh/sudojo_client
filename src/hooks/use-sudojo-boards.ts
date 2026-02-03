@@ -49,7 +49,13 @@ export const useSudojoBoards = (
     return client.getBoards(
       token,
       level !== undefined
-        ? { level, limit: undefined, offset: undefined, techniques: undefined, technique_bit: undefined }
+        ? {
+            level,
+            limit: undefined,
+            offset: undefined,
+            techniques: undefined,
+            technique_bit: undefined,
+          }
         : undefined,
     );
   }, [client, token, level]);
@@ -91,7 +97,13 @@ export const useSudojoRandomBoard = (
     return client.getRandomBoard(
       token,
       level !== undefined
-        ? { level, limit: undefined, offset: undefined, techniques: undefined, technique_bit: undefined }
+        ? {
+            level,
+            limit: undefined,
+            offset: undefined,
+            techniques: undefined,
+            technique_bit: undefined,
+          }
         : undefined,
     );
   }, [client, token, level]);

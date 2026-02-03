@@ -904,7 +904,9 @@ export class SudojoClient {
    * Get board counts by technique (count of boards with each technique bit set)
    * Returns Record<number, number> where key is technique ID and value is count
    */
-  async getBoardCountsByTechnique(token: string): Promise<BaseResponse<Record<number, number>>> {
+  async getBoardCountsByTechnique(
+    token: string,
+  ): Promise<BaseResponse<Record<number, number>>> {
     return this.request<BaseResponse<Record<number, number>>>(
       this.config.ENDPOINTS.BOARDS_COUNTS_BY_TECHNIQUE,
       { token },
