@@ -143,6 +143,7 @@ const createApiConfig = (baseUrl: string) => ({
 
     // Boards counts
     BOARDS_COUNTS: "/api/v1/boards/counts",
+    BOARDS_COUNTS_BY_TECHNIQUE: "/api/v1/boards/counts/by-technique",
 
     // Play (game sessions)
     PLAY_START: "/api/v1/play/start",
@@ -895,6 +896,17 @@ export class SudojoClient {
   async getBoardCounts(token: string): Promise<BaseResponse<BoardCountsData>> {
     return this.request<BaseResponse<BoardCountsData>>(
       this.config.ENDPOINTS.BOARDS_COUNTS,
+      { token },
+    );
+  }
+
+  /**
+   * Get board counts by technique (count of boards with each technique bit set)
+   * Returns Record<number, number> where key is technique ID and value is count
+   */
+  async getBoardCountsByTechnique(token: string): Promise<BaseResponse<Record<number, number>>> {
+    return this.request<BaseResponse<Record<number, number>>>(
+      this.config.ENDPOINTS.BOARDS_COUNTS_BY_TECHNIQUE,
       { token },
     );
   }
