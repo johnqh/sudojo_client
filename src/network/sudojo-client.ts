@@ -495,6 +495,9 @@ export class SudojoClient {
     if (queryParams?.techniques !== undefined) {
       params.append("techniques", String(queryParams.techniques));
     }
+    if (queryParams?.technique_bit !== undefined) {
+      params.append("technique_bit", String(queryParams.technique_bit));
+    }
 
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.BOARDS}${query ? `?${query}` : ""}`;
