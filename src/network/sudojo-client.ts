@@ -964,11 +964,13 @@ export class SudojoClient {
       requestHeaders["Authorization"] = `Bearer ${token}`;
     }
 
+    // Use 120 second timeout for solve (advanced techniques can be slow)
     const response = await this.networkClient.request<
       BaseResponse<SolveData> | HintAccessDeniedResponse
     >(fullUrl, {
       method: "GET",
       headers: requestHeaders,
+      timeout: 120000,
     });
 
     // Check for hint access denied (402)
