@@ -516,6 +516,10 @@ export class SudojoClient {
       params.append("level", String(queryParams.level));
     }
 
+    if (queryParams?.symmetrical !== undefined) {
+      params.append("symmetrical", String(queryParams.symmetrical));
+    }
+
     const query = params.toString();
     const endpoint = `${this.config.ENDPOINTS.BOARDS_RANDOM}${query ? `?${query}` : ""}`;
 

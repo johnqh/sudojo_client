@@ -51,6 +51,7 @@ export const useSudojoBoards = (
       level !== undefined
         ? {
             level,
+            symmetrical: undefined,
             limit: undefined,
             offset: undefined,
             techniques: undefined,
@@ -99,6 +100,7 @@ export const useSudojoRandomBoard = (
       level !== undefined
         ? {
             level,
+            symmetrical: undefined,
             limit: undefined,
             offset: undefined,
             techniques: undefined,
