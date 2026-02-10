@@ -80,8 +80,7 @@ export const useSudojoRandomPractice = (
   }, [client, token, technique]);
 
   const isEnabled =
-    technique >= 1 &&
-    (options?.enabled !== undefined ? options.enabled : true);
+    technique >= 1 && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.practiceRandom(technique),

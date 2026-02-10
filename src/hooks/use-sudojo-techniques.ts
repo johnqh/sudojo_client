@@ -83,8 +83,7 @@ export const useSudojoTechnique = (
 
   // Public endpoint - no token required, but technique is required
   const isEnabled =
-    technique >= 1 &&
-    (options?.enabled !== undefined ? options.enabled : true);
+    technique >= 1 && (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({
     queryKey: queryKeys.sudojo.technique(technique),
