@@ -59,6 +59,7 @@ export const queryKeys = {
     challenge: (uuid: string) => [...sudojoBase(), "challenges", uuid] as const,
 
     // Users
+    user: (userId: string) => [...sudojoBase(), "users", userId] as const,
     userSubscription: (userId: string) =>
       [...sudojoBase(), "users", userId, "subscription"] as const,
 

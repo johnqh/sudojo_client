@@ -97,7 +97,7 @@ export {
 // User hooks
 // ============================================================================
 
-export { useSudojoUserSubscription } from "./use-sudojo-users";
+export { useSudojoUser, useSudojoUserSubscription } from "./use-sudojo-users";
 
 // ============================================================================
 // Practice hooks

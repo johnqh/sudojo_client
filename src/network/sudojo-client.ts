@@ -1,4 +1,4 @@
-import type { NetworkClient } from "@sudobility/types";
+import type { NetworkClient, UserInfoResponse } from "@sudobility/types";
 import {
   type BadgeDefinition,
   type BaseResponse,
@@ -123,6 +123,7 @@ const createApiConfig = (baseUrl: string) => ({
     CHALLENGE: (uuid: string) => `/api/v1/challenges/${uuid}`,
 
     // Users
+    USER: (userId: string) => `/api/v1/users/${userId}`,
     USER_SUBSCRIPTIONS: (userId: string) =>
       `/api/v1/users/${userId}/subscriptions`,
 
@@ -758,6 +759,21 @@ export class SudojoClient {
   // ===========================================================================
   // Users
   // ===========================================================================
+
+  async getUser(
+    token: string,
+    userId: string,
+  ): Promise<BaseResponse<UserInfoResponse>> {
+    if (!userId || userId.length === 0 || userId.length > 128) {
+      throw new Error(`Invalid userId: "${userId}". Expected 1-128 characters`);
+    }
+    return this.request<BaseResponse<UserInfoResponse>>(
+      this.config.ENDPOINTS.USER(userId),
+      {
+        token,
+      },
+    );
+  }
 
   async getUserSubscription(
     token: string,

@@ -61,6 +61,7 @@ export {
   useSudojoRandomChallenge,
   useSudojoUpdateChallenge,
   // Users
+  useSudojoUser,
   useSudojoUserSubscription,
   // Practices
   useSudojoCreatePractice,

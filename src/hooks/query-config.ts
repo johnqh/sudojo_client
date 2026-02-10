@@ -29,6 +29,9 @@ export const STALE_TIMES = {
   // Challenges - stable once created
   CHALLENGES: 5 * 60 * 1000, // 5 minutes
 
+  // User info - cache for a while (admin status rarely changes)
+  USER: 5 * 60 * 1000, // 5 minutes
+
   // User subscription - cache for a short time
   USER_SUBSCRIPTION: 2 * 60 * 1000, // 2 minutes
 } as const;
