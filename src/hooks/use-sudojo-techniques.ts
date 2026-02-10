@@ -60,7 +60,7 @@ export const useSudojoTechniques = (
 };
 
 /**
- * Hook to get a specific technique by technique number (1-37)
+ * Hook to get a specific technique by technique number
  */
 export const useSudojoTechnique = (
   networkClient: NetworkClient,
@@ -84,7 +84,6 @@ export const useSudojoTechnique = (
   // Public endpoint - no token required, but technique is required
   const isEnabled =
     technique >= 1 &&
-    technique <= 37 &&
     (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({

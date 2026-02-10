@@ -81,7 +81,6 @@ export const useSudojoRandomPractice = (
 
   const isEnabled =
     technique >= 1 &&
-    technique <= 37 &&
     (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({

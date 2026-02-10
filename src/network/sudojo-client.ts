@@ -339,8 +339,8 @@ export class SudojoClient {
     token: string,
     technique: number,
   ): Promise<BaseResponse<Technique>> {
-    if (technique < 1 || technique > 37) {
-      throw new Error(`Invalid technique: ${technique}. Expected 1-37`);
+    if (technique < 1) {
+      throw new Error(`Invalid technique: ${technique}. Expected >= 1`);
     }
     return this.request<BaseResponse<Technique>>(
       this.config.ENDPOINTS.TECHNIQUE(technique),
@@ -367,8 +367,8 @@ export class SudojoClient {
     technique: number,
     data: TechniqueUpdateRequest,
   ): Promise<BaseResponse<Technique>> {
-    if (technique < 1 || technique > 37) {
-      throw new Error(`Invalid technique: ${technique}. Expected 1-37`);
+    if (technique < 1) {
+      throw new Error(`Invalid technique: ${technique}. Expected >= 1`);
     }
     return this.request<BaseResponse<Technique>>(
       this.config.ENDPOINTS.TECHNIQUE(technique),
@@ -384,8 +384,8 @@ export class SudojoClient {
     token: string,
     technique: number,
   ): Promise<BaseResponse<Technique>> {
-    if (technique < 1 || technique > 37) {
-      throw new Error(`Invalid technique: ${technique}. Expected 1-37`);
+    if (technique < 1) {
+      throw new Error(`Invalid technique: ${technique}. Expected >= 1`);
     }
     return this.request<BaseResponse<Technique>>(
       this.config.ENDPOINTS.TECHNIQUE(technique),
@@ -797,8 +797,8 @@ export class SudojoClient {
     token: string,
     technique: number,
   ): Promise<BaseResponse<TechniquePractice>> {
-    if (technique < 1 || technique > 37) {
-      throw new Error(`Invalid technique: ${technique}. Expected 1-37`);
+    if (technique < 1) {
+      throw new Error(`Invalid technique: ${technique}. Expected >= 1`);
     }
     return this.request<BaseResponse<TechniquePractice>>(
       this.config.ENDPOINTS.PRACTICE_RANDOM(technique),
