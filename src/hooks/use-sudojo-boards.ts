@@ -119,6 +119,7 @@ export const useSudojoRandomBoard = (
     }),
     queryFn,
     staleTime: 0, // Always fetch fresh for random
+    refetchOnWindowFocus: false, // Don't fetch a new random board on window focus
     ...options,
     enabled: isEnabled,
   });

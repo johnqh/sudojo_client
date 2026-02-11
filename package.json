@@ -1,6 +1,6 @@
 {
   "name": "@sudobility/sudojo_client",
-  "version": "0.0.73",
+  "version": "0.0.74",
   "description": "TypeScript client library for Sudojo API",
   "type": "module",
   "main": "dist/index.js",
