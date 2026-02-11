@@ -2,7 +2,7 @@
  * Hook for Sudojo boards endpoints
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import {
   useMutation,
   UseMutationResult,
@@ -94,9 +94,13 @@ export const useSudojoRandomBoard = (
   // Extract values for stable dependencies
   const level = queryParams?.level;
 
+  // Use a ref for token so queryFn reference stays stable across token refreshes
+  const tokenRef = useRef(token);
+  tokenRef.current = token;
+
   const queryFn = useCallback(async (): Promise<BaseResponse<Board>> => {
     return client.getRandomBoard(
-      token,
+      tokenRef.current,
       level !== undefined
         ? {
             level,
@@ -108,7 +112,7 @@ export const useSudojoRandomBoard = (
           }
         : undefined,
     );
-  }, [client, token, level]);
+  }, [client, level]);
 
   // Public endpoint - no token required
   const isEnabled = options?.enabled !== undefined ? options.enabled : true;
@@ -118,8 +122,8 @@ export const useSudojoRandomBoard = (
       level: level ?? undefined,
     }),
     queryFn,
-    staleTime: 0, // Always fetch fresh for random
-    refetchOnWindowFocus: false, // Don't fetch a new random board on window focus
+    staleTime: Infinity, // Only refetch via explicit nextPuzzle() / refetch()
+    refetchOnWindowFocus: false,
     ...options,
     enabled: isEnabled,
   });
