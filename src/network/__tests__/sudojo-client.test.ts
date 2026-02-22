@@ -67,8 +67,7 @@ describe("SudojoClient", () => {
         success: true,
         data: [
           {
-            uuid: VALID_UUID,
-            index: 1,
+            level: 1,
             title: "Beginner",
             text: "Basic techniques",
             requires_subscription: false,
@@ -95,12 +94,11 @@ describe("SudojoClient", () => {
       ).toBe(true);
     });
 
-    it("should get a specific level by UUID", async () => {
+    it("should get a specific level by number", async () => {
       const mockResponse = {
         success: true,
         data: {
-          uuid: VALID_UUID,
-          index: 1,
+          level: 1,
           title: "Beginner",
           text: "Basic techniques",
           requires_subscription: false,
@@ -111,23 +109,22 @@ describe("SudojoClient", () => {
       };
 
       mockNetworkClient.setMockResponse(
-        `${BASE_URL}/api/v1/levels/${VALID_UUID}`,
+        `${BASE_URL}/api/v1/levels/1`,
         { data: mockResponse },
         "GET",
       );
 
-      const result = await client.getLevel(TEST_TOKEN, VALID_UUID);
+      const result = await client.getLevel(TEST_TOKEN, 1);
 
       expect(result.success).toBe(true);
-      expect(result.data?.uuid).toBe(VALID_UUID);
+      expect(result.data?.level).toBe(1);
     });
 
     it("should create a level with authentication", async () => {
       const mockResponse = {
         success: true,
         data: {
-          uuid: VALID_UUID,
-          index: 5,
+          level: 5,
           title: "New Level",
           text: null,
           requires_subscription: false,
@@ -144,7 +141,7 @@ describe("SudojoClient", () => {
       );
 
       const result = await client.createLevel(TEST_TOKEN, {
-        index: 5,
+        level: 5,
         title: "New Level",
         text: null,
         requires_subscription: false,
@@ -161,8 +158,7 @@ describe("SudojoClient", () => {
       const mockResponse = {
         success: true,
         data: {
-          uuid: VALID_UUID,
-          index: 1,
+          level: 1,
           title: "Updated Level",
           text: "Updated description",
           requires_subscription: false,
@@ -173,12 +169,12 @@ describe("SudojoClient", () => {
       };
 
       mockNetworkClient.setMockResponse(
-        `${BASE_URL}/api/v1/levels/${VALID_UUID}`,
+        `${BASE_URL}/api/v1/levels/1`,
         { data: mockResponse },
         "PUT",
       );
 
-      const result = await client.updateLevel(TEST_TOKEN, VALID_UUID, {
+      const result = await client.updateLevel(TEST_TOKEN, 1, {
         title: "Updated Level",
         text: "Updated description",
       });
@@ -191,8 +187,7 @@ describe("SudojoClient", () => {
       const mockResponse = {
         success: true,
         data: {
-          uuid: VALID_UUID,
-          index: 1,
+          level: 1,
           title: "Deleted Level",
           text: null,
           requires_subscription: false,
@@ -203,12 +198,12 @@ describe("SudojoClient", () => {
       };
 
       mockNetworkClient.setMockResponse(
-        `${BASE_URL}/api/v1/levels/${VALID_UUID}`,
+        `${BASE_URL}/api/v1/levels/1`,
         { data: mockResponse },
         "DELETE",
       );
 
-      const result = await client.deleteLevel(TEST_TOKEN, VALID_UUID);
+      const result = await client.deleteLevel(TEST_TOKEN, 1);
 
       expect(result.success).toBe(true);
     });

@@ -1114,9 +1114,9 @@ export class SudojoClient {
   ): Promise<BaseResponse<PointTransaction[]>> {
     let endpoint = this.config.ENDPOINTS.GAMIFICATION_HISTORY;
     if (options?.limit || options?.offset) {
-      const params = new URLSearchParams();
-      if (options.limit) params.set("limit", String(options.limit));
-      if (options.offset) params.set("offset", String(options.offset));
+      const params = createURLSearchParams();
+      if (options.limit) params.append("limit", String(options.limit));
+      if (options.offset) params.append("offset", String(options.offset));
       endpoint = `${endpoint}?${params.toString()}`;
     }
     return this.request<BaseResponse<PointTransaction[]>>(endpoint, { token });

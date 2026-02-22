@@ -44,18 +44,21 @@ bun run check-all     # Run lint + typecheck + tests
 
 ```
 src/
-├── index.ts           # Main exports
-├── hooks/             # React Query hooks
-│   ├── useDailies.ts  # Daily puzzle hooks
-│   ├── useLevels.ts   # Level hooks
-│   ├── useBoards.ts   # Board/puzzle hooks
+├── index.ts                    # Main exports
+├── errors/                     # Custom error classes
+│   └── hint-access-denied.ts   # HintAccessDeniedError
+├── hooks/                      # React Query hooks (10+ files)
+│   ├── query-keys.ts           # Query key factory
+│   ├── query-config.ts         # Stale time configuration
+│   ├── use-sudojo-levels.ts    # Level hooks
+│   ├── use-sudojo-boards.ts    # Board/puzzle hooks
+│   ├── use-sudojo-dailies.ts   # Daily puzzle hooks
 │   └── ...
-├── network/           # API client layer
-│   ├── client.ts      # Base HTTP client
-│   └── endpoints.ts   # API endpoint functions
-└── solver/            # Solver integration
-    └── client.ts      # Solver API client
-dist/                  # Built output (git-ignored)
+├── network/                    # API client layer
+│   └── sudojo-client.ts        # SudojoClient class (40+ API methods)
+└── solver/                     # Solver integration
+    └── hooks/use-solver.ts     # Solver query hooks
+dist/                           # Built output (git-ignored)
 ```
 
 ## Usage Patterns
@@ -73,20 +76,11 @@ function Component() {
 
 ### Direct API Calls
 ```typescript
-import { fetchDailyPuzzle, fetchLevels } from '@sudobility/sudojo_client';
+import { SudojoClient } from '@sudobility/sudojo_client';
 
-const daily = await fetchDailyPuzzle();
-const levels = await fetchLevels({ difficulty: 'medium' });
-```
-
-### Dependency Injection
-The client uses @sudobility/di for configuration:
-```typescript
-import { Container } from '@sudobility/di';
-import { SudojoClientModule } from '@sudobility/sudojo_client';
-
-const container = new Container();
-container.register(SudojoClientModule, { apiUrl: 'https://api.sudojo.com' });
+const client = new SudojoClient(networkClient, 'https://api.sudojo.com');
+const levels = await client.getLevels(token);
+const daily = await client.getDailyByDate(token, '2024-01-15');
 ```
 
 ## Peer Dependencies
