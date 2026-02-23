@@ -121,3 +121,9 @@ export {
   useSudojoPlayStart,
   useSudojoPointHistory,
 } from "./use-sudojo-gamification";
+
+// ============================================================================
+// Invalidation utilities
+// ============================================================================
+
+export { useSudojoInvalidation } from "./use-sudojo-invalidation";

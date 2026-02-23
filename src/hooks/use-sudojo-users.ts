@@ -18,10 +18,23 @@ import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
 
 /**
- * Hook to get user info (including siteAdmin status)
+ * Hook to fetch user info including admin status.
  *
- * Note: This endpoint requires Firebase authentication.
- * The userId must match the authenticated user's Firebase UID.
+ * **Requires Firebase authentication.** The userId must match the
+ * authenticated user's Firebase UID. The query is automatically disabled
+ * when either token or userId is empty.
+ *
+ * Disables `refetchOnWindowFocus` to avoid unnecessary refetches since
+ * admin status rarely changes.
+ *
+ * Stale time: {@link STALE_TIMES.USER} (5 minutes).
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (required)
+ * @param userId - Firebase UID of the user to query
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing the UserInfoResponse
  */
 export const useSudojoUser = (
   networkClient: NetworkClient,
@@ -60,10 +73,20 @@ export const useSudojoUser = (
 };
 
 /**
- * Hook to get user subscription status
+ * Hook to fetch user subscription status (via RevenueCat integration).
  *
- * Note: This endpoint requires Firebase authentication.
- * The userId must match the authenticated user's Firebase UID.
+ * **Requires Firebase authentication.** The query is automatically disabled
+ * when either token or userId is empty. Uses a shorter stale time since
+ * subscription status may change via in-app purchase flows.
+ *
+ * Stale time: {@link STALE_TIMES.USER_SUBSCRIPTION} (2 minutes).
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (required)
+ * @param userId - Firebase UID of the user to query
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing the SubscriptionResult
  */
 export const useSudojoUserSubscription = (
   networkClient: NetworkClient,

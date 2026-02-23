@@ -24,7 +24,19 @@ import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
 
 /**
- * Hook to get all challenges with optional filtering
+ * Hook to fetch all challenges, optionally filtered by level and/or difficulty.
+ *
+ * Challenges are curated Sudoku puzzles with specific difficulty ratings.
+ * This is a public endpoint.
+ *
+ * Stale time: {@link STALE_TIMES.CHALLENGES} (5 minutes).
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param queryParams - Optional filter parameters (e.g., `{ level: 1, difficulty: 5 }`)
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing an array of Challenge objects
  */
 export const useSudojoChallenges = (
   networkClient: NetworkClient,
@@ -61,7 +73,16 @@ export const useSudojoChallenges = (
 };
 
 /**
- * Hook to get a random challenge with optional filtering
+ * Hook to fetch a random challenge, optionally filtered by level and/or difficulty.
+ *
+ * Uses `staleTime: 0` to always fetch a fresh random challenge.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param queryParams - Optional filter parameters
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing a single Challenge object
  */
 export const useSudojoRandomChallenge = (
   networkClient: NetworkClient,
@@ -98,7 +119,18 @@ export const useSudojoRandomChallenge = (
 };
 
 /**
- * Hook to get a specific challenge by UUID
+ * Hook to fetch a specific challenge by its UUID.
+ *
+ * The query is automatically disabled when no UUID is provided.
+ *
+ * Stale time: {@link STALE_TIMES.CHALLENGES} (5 minutes).
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param uuid - Challenge UUID. Query is disabled if empty.
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing a single Challenge object
  */
 export const useSudojoChallenge = (
   networkClient: NetworkClient,
@@ -133,7 +165,13 @@ export const useSudojoChallenge = (
 };
 
 /**
- * Hook to create a challenge
+ * Hook to create a new challenge. Requires admin authentication.
+ *
+ * On success, invalidates all challenge list queries.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, data })` to execute.
  */
 export const useSudojoCreateChallenge = (
   networkClient: NetworkClient,
@@ -168,7 +206,13 @@ export const useSudojoCreateChallenge = (
 };
 
 /**
- * Hook to update a challenge
+ * Hook to update an existing challenge. Requires admin authentication.
+ *
+ * On success, invalidates all challenge list queries and the specific challenge query.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, uuid, data })` to execute.
  */
 export const useSudojoUpdateChallenge = (
   networkClient: NetworkClient,
@@ -208,7 +252,14 @@ export const useSudojoUpdateChallenge = (
 };
 
 /**
- * Hook to delete a challenge
+ * Hook to delete a challenge. Requires admin authentication.
+ *
+ * On success, invalidates all challenge list queries and removes the specific
+ * challenge from the query cache.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, uuid })` to execute.
  */
 export const useSudojoDeleteChallenge = (
   networkClient: NetworkClient,

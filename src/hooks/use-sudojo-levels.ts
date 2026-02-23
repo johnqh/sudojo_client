@@ -23,7 +23,24 @@ import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
 
 /**
- * Hook to get all levels
+ * Hook to fetch all Sudoku difficulty levels.
+ *
+ * Levels are admin-managed reference data (1-12) that define puzzle difficulty
+ * tiers. This is a public endpoint that does not require authentication, though
+ * a token is accepted for consistency.
+ *
+ * Stale time: {@link STALE_TIMES.LEVELS} (10 minutes) since levels rarely change.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param options - Additional TanStack Query options (excluding queryKey and queryFn)
+ * @returns A UseQueryResult containing an array of Level objects
+ *
+ * @example
+ * ```tsx
+ * const { data: levels, isLoading } = useSudojoLevels(networkClient, baseUrl, token);
+ * ```
  */
 export const useSudojoLevels = (
   networkClient: NetworkClient,
@@ -56,7 +73,19 @@ export const useSudojoLevels = (
 };
 
 /**
- * Hook to get a specific level by level number (1-12)
+ * Hook to fetch a specific level by its number (1-12).
+ *
+ * The query is automatically disabled if the level number is outside
+ * the valid range of 1-12. This is a public endpoint.
+ *
+ * Stale time: {@link STALE_TIMES.LEVELS} (10 minutes).
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token
+ * @param level - Level number (1-12). Query is disabled if out of range.
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing a single Level object
  */
 export const useSudojoLevel = (
   networkClient: NetworkClient,
@@ -90,7 +119,20 @@ export const useSudojoLevel = (
 };
 
 /**
- * Hook to create a level
+ * Hook to create a new level. Requires admin authentication.
+ *
+ * On success, automatically invalidates the levels list query so the UI
+ * reflects the new level.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, data })` to execute.
+ *
+ * @example
+ * ```tsx
+ * const createLevel = useSudojoCreateLevel(networkClient, baseUrl);
+ * createLevel.mutate({ token, data: { level: 5, title: "Advanced", text: null, requires_subscription: true } });
+ * ```
  */
 export const useSudojoCreateLevel = (
   networkClient: NetworkClient,
@@ -123,7 +165,14 @@ export const useSudojoCreateLevel = (
 };
 
 /**
- * Hook to update a level
+ * Hook to update an existing level. Requires admin authentication.
+ *
+ * On success, automatically invalidates both the levels list and the
+ * specific level query for the updated level number.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, level, data })` to execute.
  */
 export const useSudojoUpdateLevel = (
   networkClient: NetworkClient,
@@ -161,7 +210,14 @@ export const useSudojoUpdateLevel = (
 };
 
 /**
- * Hook to delete a level
+ * Hook to delete a level. Requires admin authentication.
+ *
+ * On success, invalidates the levels list and removes the specific level
+ * from the query cache entirely.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, level })` to execute.
  */
 export const useSudojoDeleteLevel = (
   networkClient: NetworkClient,

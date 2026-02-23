@@ -74,6 +74,8 @@ export {
   useSudojoPlayFinish,
   useSudojoPlayStart,
   useSudojoPointHistory,
+  // Invalidation utilities
+  useSudojoInvalidation,
 } from "./hooks";
 export type { QueryKey } from "./hooks";
 

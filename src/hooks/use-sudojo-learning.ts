@@ -24,7 +24,19 @@ import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
 
 /**
- * Hook to get all learning entries with optional filtering
+ * Hook to fetch all learning entries, optionally filtered by technique and/or language.
+ *
+ * Learning entries contain educational content that teaches users about specific
+ * Sudoku solving techniques. This is a public endpoint.
+ *
+ * Stale time: {@link STALE_TIMES.LEARNING} (10 minutes) since learning content rarely changes.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param queryParams - Optional filter parameters (e.g., `{ technique: 1, language_code: "en" }`)
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing an array of Learning objects
  */
 export const useSudojoLearning = (
   networkClient: NetworkClient,
@@ -61,7 +73,18 @@ export const useSudojoLearning = (
 };
 
 /**
- * Hook to get a specific learning item by UUID
+ * Hook to fetch a specific learning item by its UUID.
+ *
+ * The query is automatically disabled when no UUID is provided.
+ *
+ * Stale time: {@link STALE_TIMES.LEARNING} (10 minutes).
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token
+ * @param uuid - Learning item UUID. Query is disabled if empty.
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing a single Learning object
  */
 export const useSudojoLearningItem = (
   networkClient: NetworkClient,
@@ -96,7 +119,13 @@ export const useSudojoLearningItem = (
 };
 
 /**
- * Hook to create a learning entry
+ * Hook to create a new learning entry. Requires admin authentication.
+ *
+ * On success, invalidates all learning list queries.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, data })` to execute.
  */
 export const useSudojoCreateLearning = (
   networkClient: NetworkClient,
@@ -131,7 +160,13 @@ export const useSudojoCreateLearning = (
 };
 
 /**
- * Hook to update a learning entry
+ * Hook to update an existing learning entry. Requires admin authentication.
+ *
+ * On success, invalidates all learning list queries and the specific learning item query.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, uuid, data })` to execute.
  */
 export const useSudojoUpdateLearning = (
   networkClient: NetworkClient,
@@ -171,7 +206,14 @@ export const useSudojoUpdateLearning = (
 };
 
 /**
- * Hook to delete a learning entry
+ * Hook to delete a learning entry. Requires admin authentication.
+ *
+ * On success, invalidates all learning list queries and removes the specific
+ * learning item from the query cache.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, uuid })` to execute.
  */
 export const useSudojoDeleteLearning = (
   networkClient: NetworkClient,

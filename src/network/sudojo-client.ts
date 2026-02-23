@@ -60,6 +60,23 @@ export type { SolveOptions, ValidateOptions, GenerateOptions };
 // URL Search Params Utility
 // =============================================================================
 
+/**
+ * Creates a lightweight URL search params builder.
+ *
+ * This is a custom implementation instead of the standard `URLSearchParams`
+ * because the solver API requires a special encoding behavior: **commas must
+ * NOT be percent-encoded** in pencilmark values. The standard `URLSearchParams`
+ * encodes commas as `%2C`, which the Kotlin-based solver backend does not decode.
+ *
+ * @returns An object with `append(key, value)` and `toString()` methods
+ *
+ * @example
+ * ```ts
+ * const params = createURLSearchParams();
+ * params.append("pencilmarks", "1,2,3");
+ * params.toString(); // "pencilmarks=1,2,3" (commas preserved)
+ * ```
+ */
 const createURLSearchParams = () => {
   const params: Record<string, string[]> = {};
   return {
@@ -165,6 +182,36 @@ const createApiConfig = (baseUrl: string) => ({
 // Sudojo Client Class
 // =============================================================================
 
+/**
+ * Type-safe client for the Sudojo REST API.
+ *
+ * Provides methods for all Sudojo API endpoints including levels, techniques,
+ * boards, dailies, challenges, users, solver, practices, examples, and gamification.
+ *
+ * ## Error Handling
+ *
+ * All methods throw errors on failure:
+ * - **Network errors**: Thrown by the underlying `NetworkClient` (e.g., connection refused, timeout)
+ * - **Empty response**: Throws `Error("No data received from server")` when the server returns no data
+ * - **Validation errors**: Thrown before the request for invalid parameters (e.g., invalid UUID, level out of range)
+ * - **HTTP 402**: `solverSolve()` throws {@link HintAccessDeniedError} when the hint level exceeds the user's tier
+ * - **Other HTTP errors**: Depend on the `NetworkClient` implementation - typically thrown as generic `Error`
+ *
+ * ## Authentication
+ *
+ * Most methods accept a `token` parameter (Firebase ID token). The token is sent
+ * as a `Bearer` token in the `Authorization` header. Public endpoints (health,
+ * levels, boards, etc.) accept but do not require a token. User-specific endpoints
+ * (subscriptions, gamification) require a valid token.
+ *
+ * ## Usage
+ *
+ * ```typescript
+ * const client = new SudojoClient(networkClient, "https://api.sudojo.com");
+ * const levels = await client.getLevels(token);
+ * const daily = await client.getDailyByDate(token, "2024-01-15");
+ * ```
+ */
 export class SudojoClient {
   private baseUrl: string;
   private headers: Record<string, string>;
@@ -172,9 +219,10 @@ export class SudojoClient {
   private config: ReturnType<typeof createApiConfig>;
 
   /**
-   * Create a SudojoClient
-   * @param networkClient - Network client for making requests
-   * @param baseUrl - Base URL for API requests
+   * Create a SudojoClient instance.
+   *
+   * @param networkClient - Network client for making HTTP requests (from `@sudobility/types`)
+   * @param baseUrl - Base URL for the Sudojo API (e.g., "https://api.sudojo.com")
    */
   constructor(networkClient: NetworkClient, baseUrl: string) {
     this.config = createApiConfig(baseUrl);
@@ -1127,6 +1175,16 @@ export class SudojoClient {
 // Factory Function
 // =============================================================================
 
+/**
+ * Factory function to create a new SudojoClient instance.
+ *
+ * Equivalent to `new SudojoClient(networkClient, baseUrl)` but useful
+ * for dependency injection and functional composition patterns.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL for the Sudojo API
+ * @returns A new SudojoClient instance
+ */
 export const createSudojoClient = (
   networkClient: NetworkClient,
   baseUrl: string,
@@ -1138,4 +1196,14 @@ export const createSudojoClient = (
 // Utility Exports
 // =============================================================================
 
+/**
+ * Re-exported UUID validation utilities from `@sudobility/sudojo_types`.
+ *
+ * These are used internally by the SudojoClient for parameter validation
+ * and are also exported for consumer convenience. Use `isValidUUID` for
+ * boolean checks and `validateUUID` when you want an error thrown on invalid input.
+ *
+ * - `isValidUUID(value)` - Returns true if the string is a valid UUID v4
+ * - `validateUUID(value, label)` - Returns the UUID or throws an Error with the label
+ */
 export { isValidUUID, validateUUID };

@@ -1,6 +1,6 @@
 {
   "name": "@sudobility/sudojo_client",
-  "version": "0.0.80",
+  "version": "0.0.81",
   "description": "TypeScript client library for Sudojo API",
   "type": "module",
   "main": "dist/index.js",
@@ -23,7 +23,8 @@
     "format:check": "prettier --check src/**/*.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:watch": "tsc --noEmit --watch",
-    "check-all": "bun run lint && bun run typecheck && bun run test:run"
+    "check-all": "bun run lint && bun run typecheck && bun run test:run",
+    "verify": "bun run lint && bun run typecheck && bun run test:run && bun run build"
   },
   "keywords": [
     "sudojo",

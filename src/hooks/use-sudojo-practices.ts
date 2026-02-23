@@ -22,7 +22,16 @@ import { queryKeys } from "./query-keys";
 import { SudojoClient } from "../network/sudojo-client";
 
 /**
- * Hook to get practice counts for all techniques
+ * Hook to fetch practice counts for all techniques.
+ *
+ * Returns the number of practice puzzles available for each technique.
+ * Uses `staleTime: 0` to always fetch fresh counts.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing an array of TechniquePracticeCountItem
  */
 export const useSudojoPracticeCounts = (
   networkClient: NetworkClient,
@@ -56,7 +65,17 @@ export const useSudojoPracticeCounts = (
 };
 
 /**
- * Hook to get a random practice for a specific technique
+ * Hook to fetch a random practice puzzle for a specific technique.
+ *
+ * The query is automatically disabled when technique < 1. Uses `staleTime: 0`
+ * to always fetch a fresh random practice.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token
+ * @param technique - Technique number (>= 1). Query is disabled if < 1.
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing a single TechniquePractice object
  */
 export const useSudojoRandomPractice = (
   networkClient: NetworkClient,
@@ -92,7 +111,13 @@ export const useSudojoRandomPractice = (
 };
 
 /**
- * Hook to create a practice (admin only)
+ * Hook to create a new practice puzzle. **Admin only.**
+ *
+ * On success, invalidates the practice counts query so the UI reflects the new count.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, data })` to execute.
  */
 export const useSudojoCreatePractice = (
   networkClient: NetworkClient,
@@ -127,7 +152,15 @@ export const useSudojoCreatePractice = (
 };
 
 /**
- * Hook to delete all practices (admin only)
+ * Hook to delete all practices. **Admin only.** This is a destructive operation
+ * that removes all practice puzzles from the database.
+ *
+ * Internally passes `confirm=true` as a query parameter (required by the API
+ * as a safety measure). On success, invalidates the practice counts query.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token })` to execute.
  */
 export const useSudojoDeleteAllPractices = (
   networkClient: NetworkClient,

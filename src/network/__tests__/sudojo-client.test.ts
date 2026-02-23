@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MockNetworkClient } from "@sudobility/di/mocks";
-import { SudojoClient } from "../sudojo-client";
+import { createSudojoClient, SudojoClient } from "../sudojo-client";
+import { isValidUUID, validateUUID } from "../sudojo-client";
 
 const TEST_TOKEN = "test-token-123";
 const BASE_URL = "https://test-sudojo.example.com";
@@ -682,6 +683,542 @@ describe("SudojoClient", () => {
 
       expect(result.success).toBe(true);
       expect(result.data?.hasSubscription).toBe(false);
+    });
+  });
+
+  describe("validation errors", () => {
+    it("should throw for invalid level number (0)", async () => {
+      await expect(client.getLevel(TEST_TOKEN, 0)).rejects.toThrow(
+        "Invalid level: 0. Expected 1-12",
+      );
+    });
+
+    it("should throw for invalid level number (13)", async () => {
+      await expect(client.getLevel(TEST_TOKEN, 13)).rejects.toThrow(
+        "Invalid level: 13. Expected 1-12",
+      );
+    });
+
+    it("should throw for invalid level on update", async () => {
+      await expect(
+        client.updateLevel(TEST_TOKEN, 0, { title: "test" }),
+      ).rejects.toThrow("Invalid level: 0. Expected 1-12");
+    });
+
+    it("should throw for invalid level on delete", async () => {
+      await expect(client.deleteLevel(TEST_TOKEN, 13)).rejects.toThrow(
+        "Invalid level: 13. Expected 1-12",
+      );
+    });
+
+    it("should throw for invalid technique number", async () => {
+      await expect(client.getTechnique(TEST_TOKEN, 0)).rejects.toThrow(
+        "Invalid technique: 0. Expected >= 1",
+      );
+    });
+
+    it("should throw for invalid technique on update", async () => {
+      await expect(
+        client.updateTechnique(TEST_TOKEN, -1, {
+          title: "test",
+          index: 1,
+          text: null,
+        }),
+      ).rejects.toThrow("Invalid technique: -1. Expected >= 1");
+    });
+
+    it("should throw for invalid technique on delete", async () => {
+      await expect(client.deleteTechnique(TEST_TOKEN, 0)).rejects.toThrow(
+        "Invalid technique: 0. Expected >= 1",
+      );
+    });
+
+    it("should throw for invalid date format", async () => {
+      await expect(
+        client.getDailyByDate(TEST_TOKEN, "01-15-2025"),
+      ).rejects.toThrow('Invalid date format: "01-15-2025"');
+    });
+
+    it("should throw for incomplete date format", async () => {
+      await expect(
+        client.getDailyByDate(TEST_TOKEN, "2025-01"),
+      ).rejects.toThrow('Invalid date format: "2025-01"');
+    });
+
+    it("should throw for empty userId on getUser", async () => {
+      await expect(client.getUser(TEST_TOKEN, "")).rejects.toThrow(
+        'Invalid userId: ""',
+      );
+    });
+
+    it("should throw for too long userId on getUser", async () => {
+      const longUserId = "a".repeat(129);
+      await expect(client.getUser(TEST_TOKEN, longUserId)).rejects.toThrow(
+        "Invalid userId",
+      );
+    });
+
+    it("should throw for empty userId on getUserSubscription", async () => {
+      await expect(
+        client.getUserSubscription(TEST_TOKEN, ""),
+      ).rejects.toThrow('Invalid userId: ""');
+    });
+
+    it("should throw for invalid practice technique number", async () => {
+      await expect(client.getRandomPractice(TEST_TOKEN, 0)).rejects.toThrow(
+        "Invalid technique: 0. Expected >= 1",
+      );
+    });
+  });
+
+  describe("no data handling", () => {
+    it("should throw when server returns no data", async () => {
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/levels`,
+        { data: undefined },
+        "GET",
+      );
+
+      await expect(client.getLevels(TEST_TOKEN)).rejects.toThrow(
+        "No data received from server",
+      );
+    });
+  });
+
+  describe("practices", () => {
+    it("should get practice counts", async () => {
+      const mockResponse = {
+        success: true,
+        data: [
+          { technique: 1, count: 10 },
+          { technique: 2, count: 5 },
+        ],
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/practices/counts`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getPracticeCounts(TEST_TOKEN);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(2);
+    });
+
+    it("should get a random practice for a technique", async () => {
+      const mockResponse = {
+        success: true,
+        data: {
+          uuid: VALID_UUID,
+          technique: 1,
+          board_original: "0".repeat(81),
+          board_solution: "1".repeat(81),
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/practices/technique/1/random`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getRandomPractice(TEST_TOKEN, 1);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should create a practice", async () => {
+      const mockResponse = {
+        success: true,
+        data: {
+          uuid: VALID_UUID,
+          technique: 1,
+          board_original: "0".repeat(81),
+          board_solution: "1".repeat(81),
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/practices`,
+        { data: mockResponse },
+        "POST",
+      );
+
+      const result = await client.createPractice(TEST_TOKEN, {
+        technique: 1,
+        board_original: "0".repeat(81),
+        board_solution: "1".repeat(81),
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should delete all practices", async () => {
+      const mockResponse = {
+        success: true,
+        data: { deleted: 15, message: "All practices deleted" },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/practices?confirm=true`,
+        { data: mockResponse },
+        "DELETE",
+      );
+
+      const result = await client.deleteAllPractices(TEST_TOKEN);
+
+      expect(result.success).toBe(true);
+      expect(result.data?.deleted).toBe(15);
+    });
+  });
+
+  describe("gamification", () => {
+    it("should get gamification stats", async () => {
+      const mockResponse = {
+        success: true,
+        data: {
+          totalPoints: 1500,
+          level: 5,
+          badges: [],
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/gamification/stats`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getGamificationStats(TEST_TOKEN);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should get badge definitions", async () => {
+      const mockResponse = {
+        success: true,
+        data: [
+          {
+            id: "first_solve",
+            name: "First Solve",
+            description: "Complete your first puzzle",
+          },
+        ],
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/gamification/badges`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getBadgeDefinitions();
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
+    });
+
+    it("should get point history", async () => {
+      const mockResponse = {
+        success: true,
+        data: [
+          {
+            id: "txn-1",
+            points: 100,
+            reason: "puzzle_complete",
+            created_at: new Date(),
+          },
+        ],
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/gamification/history`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getPointHistory(TEST_TOKEN);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should get point history with pagination", async () => {
+      const mockResponse = {
+        success: true,
+        data: [],
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/gamification/history?limit=10&offset=20`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getPointHistory(TEST_TOKEN, {
+        limit: 10,
+        offset: 20,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should start a play session", async () => {
+      const mockResponse = {
+        success: true,
+        data: { sessionId: "session-123" },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/play/start`,
+        { data: mockResponse },
+        "POST",
+      );
+
+      const result = await client.playStart(TEST_TOKEN, {
+        board_uuid: VALID_UUID,
+        mode: "play",
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should finish a play session", async () => {
+      const mockResponse = {
+        success: true,
+        data: {
+          points_earned: 100,
+          badges_earned: [],
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/play/finish`,
+        { data: mockResponse },
+        "POST",
+      );
+
+      const result = await client.playFinish(TEST_TOKEN, {
+        session_uuid: "session-123",
+        completed: true,
+        time_seconds: 120,
+      });
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("solver", () => {
+    it("should validate a puzzle", async () => {
+      const mockResponse = {
+        success: true,
+        data: {
+          valid: true,
+          uniqueSolution: true,
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/solver/validate?original=${"0".repeat(81)}`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.solverValidate(TEST_TOKEN, {
+        original: "0".repeat(81),
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should generate a puzzle", async () => {
+      const mockResponse = {
+        success: true,
+        data: {
+          original: "0".repeat(81),
+          solution: "1".repeat(81),
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/solver/generate`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.solverGenerate(TEST_TOKEN);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should generate a symmetrical puzzle", async () => {
+      const mockResponse = {
+        success: true,
+        data: {
+          original: "0".repeat(81),
+          solution: "1".repeat(81),
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/solver/generate?symmetrical=true`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.solverGenerate(TEST_TOKEN, {
+        symmetrical: true,
+      });
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("examples", () => {
+    it("should get example counts", async () => {
+      const mockResponse = {
+        success: true,
+        data: { total: 100 },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/examples/counts`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getExampleCounts(TEST_TOKEN);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should get examples", async () => {
+      const mockResponse = {
+        success: true,
+        data: [],
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/examples`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getExamples(TEST_TOKEN);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should get examples filtered by technique", async () => {
+      const mockResponse = {
+        success: true,
+        data: [],
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/examples?technique=3`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getExamples(TEST_TOKEN, { technique: 3 });
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("board counts", () => {
+    it("should get board counts", async () => {
+      const mockResponse = {
+        success: true,
+        data: { total: 500, withoutTechniques: 50 },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/boards/counts`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getBoardCounts(TEST_TOKEN);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should get board counts by technique", async () => {
+      const mockResponse = {
+        success: true,
+        data: { 1: 100, 2: 200 },
+        timestamp: new Date().toISOString(),
+      };
+
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/boards/counts/by-technique`,
+        { data: mockResponse },
+        "GET",
+      );
+
+      const result = await client.getBoardCountsByTechnique(TEST_TOKEN);
+
+      expect(result.success).toBe(true);
+    });
+  });
+});
+
+describe("createSudojoClient", () => {
+  it("should create a SudojoClient instance", () => {
+    const mockNetworkClient = new MockNetworkClient();
+    const client = createSudojoClient(mockNetworkClient, BASE_URL);
+
+    expect(client).toBeDefined();
+    expect(client).toBeInstanceOf(SudojoClient);
+  });
+});
+
+describe("utility exports", () => {
+  describe("isValidUUID", () => {
+    it("should return true for a valid UUID", () => {
+      expect(isValidUUID(VALID_UUID)).toBe(true);
+    });
+
+    it("should return false for an invalid UUID", () => {
+      expect(isValidUUID("not-a-uuid")).toBe(false);
+    });
+
+    it("should return false for an empty string", () => {
+      expect(isValidUUID("")).toBe(false);
+    });
+  });
+
+  describe("validateUUID", () => {
+    it("should return the UUID for a valid input", () => {
+      expect(validateUUID(VALID_UUID, "Test")).toBe(VALID_UUID);
+    });
+
+    it("should throw for an invalid UUID", () => {
+      expect(() => validateUUID("not-valid", "Test")).toThrow();
     });
   });
 });
