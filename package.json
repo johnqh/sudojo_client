@@ -1,6 +1,6 @@
 {
   "name": "@sudobility/sudojo_client",
-  "version": "0.0.82",
+  "version": "0.0.83",
   "description": "TypeScript client library for Sudojo API",
   "type": "module",
   "main": "dist/index.js",
@@ -36,7 +36,7 @@
   "author": "Sudobility Team",
   "license": "BUSL-1.1",
   "peerDependencies": {
-    "@sudobility/di": "^1.5.41",
+    "@sudobility/di": "^1.5.42",
     "@sudobility/sudojo_types": "^1.2.35",
     "@sudobility/types": "^1.9.54",
     "@tanstack/react-query": ">=5.0.0",
@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
-    "@sudobility/di": "^1.5.41",
+    "@sudobility/di": "^1.5.42",
     "@sudobility/sudojo_types": "^1.2.35",
     "@sudobility/types": "^1.9.54",
     "@tanstack/react-query": "^5.90.5",
