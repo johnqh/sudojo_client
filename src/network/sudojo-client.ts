@@ -57,6 +57,79 @@ import { HintAccessDeniedError } from "../errors";
 export type { SolveOptions, ValidateOptions, GenerateOptions };
 
 // =============================================================================
+// Solution Decryption
+// =============================================================================
+
+let _solutionKey: CryptoKey | null = null;
+
+/**
+ * Configure the symmetric key used to decrypt `solution` fields in API responses.
+ * Call once at app startup with the hex-encoded 256-bit key.
+ * If not called (or called with empty string), encrypted solutions pass through as-is.
+ */
+export async function configureSolutionKey(keyHex: string): Promise<void> {
+  if (!keyHex) return;
+  const hexPairs = keyHex.match(/.{2}/g);
+  if (!hexPairs) return;
+  const keyBytes = new Uint8Array(hexPairs.map((byte) => parseInt(byte, 16)));
+  _solutionKey = await globalThis.crypto.subtle.importKey(
+    "raw",
+    keyBytes,
+    "AES-GCM",
+    false,
+    ["decrypt"],
+  );
+}
+
+async function decryptSolution(encrypted: string): Promise<string> {
+  if (!_solutionKey) return encrypted;
+
+  const raw = globalThis.atob(encrypted.slice(4)); // strip "enc:" prefix
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) {
+    bytes[i] = raw.charCodeAt(i);
+  }
+
+  const nonce = bytes.slice(0, 12);
+  const ciphertextWithTag = bytes.slice(12);
+
+  const decrypted = await globalThis.crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: nonce },
+    _solutionKey,
+    ciphertextWithTag,
+  );
+
+  return new TextDecoder().decode(decrypted);
+}
+
+async function decryptSolutionFields(data: unknown): Promise<unknown> {
+  if (data === null || data === undefined) return data;
+
+  if (Array.isArray(data)) {
+    return Promise.all(data.map((item) => decryptSolutionFields(item)));
+  }
+
+  if (typeof data === "object") {
+    const obj = data as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    for (const key of Object.keys(obj)) {
+      if (
+        key === "solution" &&
+        typeof obj[key] === "string" &&
+        (obj[key] as string).startsWith("enc:")
+      ) {
+        result[key] = await decryptSolution(obj[key] as string);
+      } else {
+        result[key] = await decryptSolutionFields(obj[key]);
+      }
+    }
+    return result;
+  }
+
+  return data;
+}
+
+// =============================================================================
 // URL Search Params Utility
 // =============================================================================
 
@@ -286,7 +359,7 @@ export class SudojoClient {
       throw new Error("No data received from server");
     }
 
-    return response.data as T;
+    return (await decryptSolutionFields(response.data)) as T;
   }
 
   // ===========================================================================
@@ -1054,7 +1127,9 @@ export class SudojoClient {
       throw new Error("Failed to get hints from solver");
     }
 
-    return response.data as BaseResponse<SolveData>;
+    return (await decryptSolutionFields(
+      response.data,
+    )) as BaseResponse<SolveData>;
   }
 
   /**

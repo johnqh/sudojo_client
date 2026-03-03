@@ -1,4 +1,5 @@
 export {
+  configureSolutionKey,
   createSudojoClient,
   isValidUUID,
   SudojoClient,
