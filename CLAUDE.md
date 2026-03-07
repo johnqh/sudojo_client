@@ -100,24 +100,6 @@ This library requires these peer dependencies in the consuming app:
 - Use types from `@sudobility/sudojo_types`
 - All hooks should handle loading/error states
 
-## Testing
-
-Tests use Vitest with happy-dom:
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { useDailyPuzzle } from '../hooks/useDailies';
-
-describe('useDailyPuzzle', () => {
-  it('should fetch daily puzzle', async () => {
-    const { result } = renderHook(() => useDailyPuzzle());
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toBeDefined();
-  });
-});
-```
-
 ## Publishing
 
 Package is published to npm with restricted access:
