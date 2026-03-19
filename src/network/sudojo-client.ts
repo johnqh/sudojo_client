@@ -900,16 +900,17 @@ export class SudojoClient {
   async getUserSubscription(
     token: string,
     userId: string,
+    testMode?: boolean,
   ): Promise<BaseResponse<SubscriptionResult>> {
     if (!userId || userId.length === 0 || userId.length > 128) {
       throw new Error(`Invalid userId: "${userId}". Expected 1-128 characters`);
     }
-    return this.request<BaseResponse<SubscriptionResult>>(
-      this.config.ENDPOINTS.USER_SUBSCRIPTIONS(userId),
-      {
-        token,
-      },
-    );
+    const endpoint = testMode
+      ? `${this.config.ENDPOINTS.USER_SUBSCRIPTIONS(userId)}?testMode=true`
+      : this.config.ENDPOINTS.USER_SUBSCRIPTIONS(userId);
+    return this.request<BaseResponse<SubscriptionResult>>(endpoint, {
+      token,
+    });
   }
 
   // ===========================================================================

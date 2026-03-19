@@ -93,6 +93,7 @@ export const useSudojoUserSubscription = (
   baseUrl: string,
   token: string,
   userId: string,
+  testMode?: boolean,
   options?: Omit<
     UseQueryOptions<BaseResponse<SubscriptionResult>>,
     "queryKey" | "queryFn"
@@ -106,8 +107,8 @@ export const useSudojoUserSubscription = (
   const queryFn = useCallback(async (): Promise<
     BaseResponse<SubscriptionResult>
   > => {
-    return client.getUserSubscription(token, userId);
-  }, [client, token, userId]);
+    return client.getUserSubscription(token, userId, testMode);
+  }, [client, token, userId, testMode]);
 
   const isEnabled =
     !!userId &&
