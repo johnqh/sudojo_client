@@ -66,44 +66,6 @@ export const useSudojoDailies = (
 };
 
 /**
- * Hook to fetch a random daily puzzle.
- *
- * Uses `staleTime: 0` to always fetch a fresh random daily on each access.
- *
- * @param networkClient - Network client for making HTTP requests
- * @param baseUrl - Base URL of the Sudojo API
- * @param token - Firebase access token (optional for this public endpoint)
- * @param options - Additional TanStack Query options
- * @returns A UseQueryResult containing a single Daily object
- */
-export const useSudojoRandomDaily = (
-  networkClient: NetworkClient,
-  baseUrl: string,
-  token: string,
-  options?: Omit<UseQueryOptions<BaseResponse<Daily>>, "queryKey" | "queryFn">,
-): UseQueryResult<BaseResponse<Daily>> => {
-  const client = useMemo(
-    () => new SudojoClient(networkClient, baseUrl),
-    [networkClient, baseUrl],
-  );
-
-  const queryFn = useCallback(async (): Promise<BaseResponse<Daily>> => {
-    return client.getRandomDaily(token);
-  }, [client, token]);
-
-  // Public endpoint - no token required
-  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
-
-  return useQuery({
-    queryKey: queryKeys.sudojo.dailyRandom(),
-    queryFn,
-    staleTime: 0, // Always fetch fresh for random
-    ...options,
-    enabled: isEnabled,
-  });
-};
-
-/**
  * Hook to fetch today's daily puzzle.
  *
  * The server determines "today" based on its timezone configuration.

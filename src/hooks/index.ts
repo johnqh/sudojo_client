@@ -75,7 +75,6 @@ export {
   useSudojoDaily,
   useSudojoDailyByDate,
   useSudojoDeleteDaily,
-  useSudojoRandomDaily,
   useSudojoTodayDaily,
   useSudojoUpdateDaily,
 } from "./use-sudojo-dailies";

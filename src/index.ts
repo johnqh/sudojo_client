@@ -51,7 +51,6 @@ export {
   useSudojoDaily,
   useSudojoDailyByDate,
   useSudojoDeleteDaily,
-  useSudojoRandomDaily,
   useSudojoTodayDaily,
   useSudojoUpdateDaily,
   // Challenges

@@ -125,14 +125,6 @@ describe("queryKeys", () => {
       expect(queryKeys.sudojo.dailies()).toEqual(["sudojo", "dailies"]);
     });
 
-    it("should return daily random key", () => {
-      expect(queryKeys.sudojo.dailyRandom()).toEqual([
-        "sudojo",
-        "dailies",
-        "random",
-      ]);
-    });
-
     it("should return daily today key", () => {
       expect(queryKeys.sudojo.dailyToday()).toEqual([
         "sudojo",

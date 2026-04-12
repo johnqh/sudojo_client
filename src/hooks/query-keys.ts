@@ -78,8 +78,6 @@ export const queryKeys = {
     // Dailies
     /** Key for the dailies list query. */
     dailies: () => [...sudojoBase(), "dailies"] as const,
-    /** Key for the random daily query. */
-    dailyRandom: () => [...sudojoBase(), "dailies", "random"] as const,
     /** Key for today's daily puzzle query. */
     dailyToday: () => [...sudojoBase(), "dailies", "today"] as const,
     /** Key for a daily puzzle by date. @param date - Date string in YYYY-MM-DD format */

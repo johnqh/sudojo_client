@@ -459,30 +459,6 @@ describe("SudojoClient", () => {
       expect(result.success).toBe(true);
     });
 
-    it("should get a random daily", async () => {
-      const mockResponse = {
-        success: true,
-        data: {
-          uuid: VALID_UUID,
-          board_uuid: VALID_UUID,
-          date: "2025-01-15",
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-        timestamp: new Date().toISOString(),
-      };
-
-      mockNetworkClient.setMockResponse(
-        `${BASE_URL}/api/v1/dailies/random`,
-        { data: mockResponse },
-        "GET",
-      );
-
-      const result = await client.getRandomDaily(TEST_TOKEN);
-
-      expect(result.success).toBe(true);
-    });
-
     it("should get today's daily", async () => {
       const mockResponse = {
         success: true,

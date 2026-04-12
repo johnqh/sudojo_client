@@ -3,6 +3,7 @@ import {
   type BadgeDefinition,
   type BaseResponse,
   type Board,
+  type BoardCountsByTechniqueData,
   type BoardCountsData,
   type BoardCreateRequest,
   type BoardQueryParams,
@@ -34,6 +35,7 @@ import {
   type LevelUpdateRequest,
   type Optional,
   type PointTransaction,
+  type PracticesBulkDeleteData,
   type SolveData,
   type SolveOptions,
   type SubscriptionResult,
@@ -47,6 +49,7 @@ import {
   type TechniquePracticeCreateRequest,
   type TechniqueQueryParams,
   type TechniqueUpdateRequest,
+  type UpdateStatsData,
   type ValidateData,
   type ValidateOptions,
   validateUUID,
@@ -202,7 +205,6 @@ const createApiConfig = (baseUrl: string) => ({
 
     // Dailies
     DAILIES: "/api/v1/dailies",
-    DAILIES_RANDOM: "/api/v1/dailies/random",
     DAILIES_TODAY: "/api/v1/dailies/today",
     DAILIES_DATE: (date: string) => `/api/v1/dailies/date/${date}`,
     DAILY: (uuid: string) => `/api/v1/dailies/${uuid}`,
@@ -705,13 +707,6 @@ export class SudojoClient {
     });
   }
 
-  async getRandomDaily(token: string): Promise<BaseResponse<Daily>> {
-    return this.request<BaseResponse<Daily>>(
-      this.config.ENDPOINTS.DAILIES_RANDOM,
-      { token },
-    );
-  }
-
   async getTodayDaily(token: string): Promise<BaseResponse<Daily>> {
     return this.request<BaseResponse<Daily>>(
       this.config.ENDPOINTS.DAILIES_TODAY,
@@ -967,8 +962,8 @@ export class SudojoClient {
    */
   async deleteAllPractices(
     token: string,
-  ): Promise<BaseResponse<{ deleted: number; message: string }>> {
-    return this.request<BaseResponse<{ deleted: number; message: string }>>(
+  ): Promise<BaseResponse<PracticesBulkDeleteData>> {
+    return this.request<BaseResponse<PracticesBulkDeleteData>>(
       `${this.config.ENDPOINTS.PRACTICES}?confirm=true`,
       {
         method: "DELETE",
@@ -1049,8 +1044,8 @@ export class SudojoClient {
    */
   async getBoardCountsByTechnique(
     token: string,
-  ): Promise<BaseResponse<Record<number, number>>> {
-    return this.request<BaseResponse<Record<number, number>>>(
+  ): Promise<BaseResponse<BoardCountsByTechniqueData>> {
+    return this.request<BaseResponse<BoardCountsByTechniqueData>>(
       this.config.ENDPOINTS.BOARDS_COUNTS_BY_TECHNIQUE,
       { token },
     );
@@ -1060,21 +1055,16 @@ export class SudojoClient {
    * Calculate and update puzzle stats (percentages) on levels and techniques.
    * Requires admin authentication.
    */
-  async updatePuzzleStats(token: string): Promise<
-    BaseResponse<{
-      levels: Record<number, number>;
-      techniques: Record<number, number>;
-    }>
-  > {
-    return this.request<
-      BaseResponse<{
-        levels: Record<number, number>;
-        techniques: Record<number, number>;
-      }>
-    >(this.config.ENDPOINTS.BOARDS_UPDATE_STATS, {
-      method: "POST",
-      token,
-    });
+  async updatePuzzleStats(
+    token: string,
+  ): Promise<BaseResponse<UpdateStatsData>> {
+    return this.request<BaseResponse<UpdateStatsData>>(
+      this.config.ENDPOINTS.BOARDS_UPDATE_STATS,
+      {
+        method: "POST",
+        token,
+      },
+    );
   }
 
   // ===========================================================================
