@@ -67,6 +67,7 @@ export const useSolverSolve = (
       autoPencilmarks: options.autoPencilmarks,
       pencilmarks: options.pencilmarks,
       filters: options.filters,
+      techniques: options.techniques,
     }),
     queryFn,
     staleTime: SOLVER_STALE_TIMES.SOLVE,

@@ -35,6 +35,7 @@ export const solverQueryKeys = {
     autoPencilmarks?: boolean | undefined;
     pencilmarks?: string | undefined;
     filters?: string | undefined;
+    techniques?: string | undefined;
   }) => [...solverBase(), "solve", options] as const,
 
   /**
