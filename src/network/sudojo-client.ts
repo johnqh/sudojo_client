@@ -36,6 +36,7 @@ import {
   type Optional,
   type PointTransaction,
   type PracticesBulkDeleteData,
+  type PracticesRegenerateHintsData,
   type SolveData,
   type SolveOptions,
   type SubscriptionResult,
@@ -967,6 +968,21 @@ export class SudojoClient {
       `${this.config.ENDPOINTS.PRACTICES}?confirm=true`,
       {
         method: "DELETE",
+        token,
+      },
+    );
+  }
+
+  /**
+   * Regenerate hint_data for all practices by calling the solver (admin only).
+   */
+  async regeneratePracticeHints(
+    token: string,
+  ): Promise<BaseResponse<PracticesRegenerateHintsData>> {
+    return this.request<BaseResponse<PracticesRegenerateHintsData>>(
+      `${this.config.ENDPOINTS.PRACTICES}/regenerate-hints`,
+      {
+        method: "POST",
         token,
       },
     );

@@ -105,6 +105,7 @@ export { useSudojoUser, useSudojoUserSubscription } from "./use-sudojo-users";
 export {
   useSudojoCreatePractice,
   useSudojoDeleteAllPractices,
+  useSudojoRegeneratePracticeHints,
   useSudojoPracticeCounts,
   useSudojoRandomPractice,
 } from "./use-sudojo-practices";

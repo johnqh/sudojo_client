@@ -14,6 +14,7 @@ import {
 import type { NetworkClient } from "@sudobility/types";
 import type {
   BaseResponse,
+  PracticesRegenerateHintsData,
   TechniquePractice,
   TechniquePracticeCountItem,
   TechniquePracticeCreateRequest,
@@ -184,6 +185,26 @@ export const useSudojoDeleteAllPractices = (
       queryClient.invalidateQueries({
         queryKey: queryKeys.sudojo.practiceCounts(),
       });
+    },
+  });
+};
+
+export const useSudojoRegeneratePracticeHints = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+): UseMutationResult<
+  BaseResponse<PracticesRegenerateHintsData>,
+  Error,
+  { token: string }
+> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+
+  return useMutation({
+    mutationFn: async ({ token }: { token: string }) => {
+      return client.regeneratePracticeHints(token);
     },
   });
 };

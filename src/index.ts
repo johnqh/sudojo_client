@@ -66,6 +66,7 @@ export {
   // Practices
   useSudojoCreatePractice,
   useSudojoDeleteAllPractices,
+  useSudojoRegeneratePracticeHints,
   useSudojoPracticeCounts,
   useSudojoRandomPractice,
   // Gamification
