@@ -975,6 +975,7 @@ export class SudojoClient {
 
   /**
    * Regenerate hint_data for all practices by calling the solver (admin only).
+   * Uses a 10-minute timeout because this processes all practices sequentially.
    */
   async regeneratePracticeHints(
     token: string,
@@ -984,6 +985,7 @@ export class SudojoClient {
       {
         method: "POST",
         token,
+        timeout: 600000,
       },
     );
   }
