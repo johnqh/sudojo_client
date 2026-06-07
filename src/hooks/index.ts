@@ -123,6 +123,17 @@ export {
 } from "./use-sudojo-gamification";
 
 // ============================================================================
+// Community hooks
+// ============================================================================
+
+export {
+  useSudojoCommunities,
+  useSudojoCreateCommunity,
+  useSudojoDeleteCommunity,
+  useSudojoUpdateCommunity,
+} from "./use-sudojo-communities";
+
+// ============================================================================
 // Invalidation utilities
 // ============================================================================
 

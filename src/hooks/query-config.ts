@@ -52,4 +52,7 @@ export const STALE_TIMES = {
 
   /** User subscription - may change via in-app purchase; shorter cache (2 min). */
   USER_SUBSCRIPTION: 2 * 60 * 1000, // 2 minutes
+
+  /** Communities - admin-managed reference data that rarely changes (10 min). */
+  COMMUNITIES: 10 * 60 * 1000, // 10 minutes
 } as const;

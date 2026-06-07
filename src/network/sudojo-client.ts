@@ -12,6 +12,10 @@ import {
   type ChallengeCreateRequest,
   type ChallengeQueryParams,
   type ChallengeUpdateRequest,
+  type Community,
+  type CommunityCreateRequest,
+  type CommunityQueryParams,
+  type CommunityUpdateRequest,
   type Daily,
   type DailyCreateRequest,
   type DailyUpdateRequest,
@@ -248,6 +252,10 @@ const createApiConfig = (baseUrl: string) => ({
     GAMIFICATION_STATS: "/api/v1/gamification/stats",
     GAMIFICATION_BADGES: "/api/v1/gamification/badges",
     GAMIFICATION_HISTORY: "/api/v1/gamification/history",
+
+    // Communities
+    COMMUNITIES: "/api/v1/communities",
+    COMMUNITY: (uuid: string) => `/api/v1/communities/${uuid}`,
   },
   DEFAULT_HEADERS: {
     "Content-Type": "application/json",
@@ -1229,6 +1237,81 @@ export class SudojoClient {
       {
         method: "POST",
         body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  // ===========================================================================
+  // Communities
+  // ===========================================================================
+
+  async getCommunities(
+    token: string,
+    queryParams?: CommunityQueryParams,
+  ): Promise<BaseResponse<Community[]>> {
+    const params = createURLSearchParams();
+
+    if (queryParams?.language !== undefined) {
+      params.append("language", queryParams.language);
+    }
+
+    const query = params.toString();
+    const endpoint = `${this.config.ENDPOINTS.COMMUNITIES}${query ? `?${query}` : ""}`;
+
+    return this.request<BaseResponse<Community[]>>(endpoint, { token });
+  }
+
+  async getCommunity(
+    token: string,
+    uuid: string,
+  ): Promise<BaseResponse<Community>> {
+    validateUUID(uuid);
+    return this.request<BaseResponse<Community>>(
+      this.config.ENDPOINTS.COMMUNITY(uuid),
+      { token },
+    );
+  }
+
+  async createCommunity(
+    token: string,
+    data: CommunityCreateRequest,
+  ): Promise<BaseResponse<Community>> {
+    return this.request<BaseResponse<Community>>(
+      this.config.ENDPOINTS.COMMUNITIES,
+      {
+        method: "POST",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  async updateCommunity(
+    token: string,
+    uuid: string,
+    data: CommunityUpdateRequest,
+  ): Promise<BaseResponse<Community>> {
+    validateUUID(uuid);
+    return this.request<BaseResponse<Community>>(
+      this.config.ENDPOINTS.COMMUNITY(uuid),
+      {
+        method: "PUT",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  async deleteCommunity(
+    token: string,
+    uuid: string,
+  ): Promise<BaseResponse<Community>> {
+    validateUUID(uuid);
+    return this.request<BaseResponse<Community>>(
+      this.config.ENDPOINTS.COMMUNITY(uuid),
+      {
+        method: "DELETE",
         token,
       },
     );

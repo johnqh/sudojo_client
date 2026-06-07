@@ -114,6 +114,11 @@ export const queryKeys = {
     practiceRandom: (technique: number) =>
       [...sudojoBase(), "practices", "random", technique] as const,
 
+    // Communities
+    /** Key for the communities list query, filtered by language. */
+    communities: (filters?: { language?: string | undefined }) =>
+      [...sudojoBase(), "communities", filters] as const,
+
     // Gamification
     /** Key for the user's gamification stats (points, level, badges). */
     gamificationStats: () =>

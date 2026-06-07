@@ -69,6 +69,11 @@ export {
   useSudojoRegeneratePracticeHints,
   useSudojoPracticeCounts,
   useSudojoRandomPractice,
+  // Communities
+  useSudojoCommunities,
+  useSudojoCreateCommunity,
+  useSudojoDeleteCommunity,
+  useSudojoUpdateCommunity,
   // Gamification
   useSudojoBadgeDefinitions,
   useSudojoGamificationStats,
