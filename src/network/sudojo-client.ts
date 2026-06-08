@@ -43,6 +43,9 @@ import {
   type PracticesRegenerateHintsData,
   type SolveData,
   type SolveOptions,
+  type Strategy,
+  type StrategyCreateRequest,
+  type StrategyUpdateRequest,
   type SubscriptionResult,
   type Technique,
   type TechniqueCreateRequest,
@@ -256,6 +259,11 @@ const createApiConfig = (baseUrl: string) => ({
     // Communities
     COMMUNITIES: "/api/v1/communities",
     COMMUNITY: (uuid: string) => `/api/v1/communities/${uuid}`,
+
+    // Strategies
+    STRATEGIES: "/api/v1/strategies",
+    STRATEGY: (strategy: number) => `/api/v1/strategies/${strategy}`,
+    STRATEGY_BY_STUB: (stub: string) => `/api/v1/strategies/stub/${stub}`,
   },
   DEFAULT_HEADERS: {
     "Content-Type": "application/json",
@@ -1310,6 +1318,82 @@ export class SudojoClient {
     validateUUID(uuid);
     return this.request<BaseResponse<Community>>(
       this.config.ENDPOINTS.COMMUNITY(uuid),
+      {
+        method: "DELETE",
+        token,
+      },
+    );
+  }
+
+  // ===========================================================================
+  // Strategies
+  // ===========================================================================
+
+  async getStrategies(token: string): Promise<BaseResponse<Strategy[]>> {
+    return this.request<BaseResponse<Strategy[]>>(
+      this.config.ENDPOINTS.STRATEGIES,
+      { token },
+    );
+  }
+
+  async getStrategy(
+    token: string,
+    strategy: number,
+  ): Promise<BaseResponse<Strategy>> {
+    if (strategy < 1) throw new Error("Strategy ID must be >= 1");
+    return this.request<BaseResponse<Strategy>>(
+      this.config.ENDPOINTS.STRATEGY(strategy),
+      { token },
+    );
+  }
+
+  async getStrategyByStub(
+    token: string,
+    stub: string,
+  ): Promise<BaseResponse<Strategy>> {
+    return this.request<BaseResponse<Strategy>>(
+      this.config.ENDPOINTS.STRATEGY_BY_STUB(stub),
+      { token },
+    );
+  }
+
+  async createStrategy(
+    token: string,
+    data: StrategyCreateRequest,
+  ): Promise<BaseResponse<Strategy>> {
+    return this.request<BaseResponse<Strategy>>(
+      this.config.ENDPOINTS.STRATEGIES,
+      {
+        method: "POST",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  async updateStrategy(
+    token: string,
+    strategy: number,
+    data: StrategyUpdateRequest,
+  ): Promise<BaseResponse<Strategy>> {
+    if (strategy < 1) throw new Error("Strategy ID must be >= 1");
+    return this.request<BaseResponse<Strategy>>(
+      this.config.ENDPOINTS.STRATEGY(strategy),
+      {
+        method: "PUT",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  async deleteStrategy(
+    token: string,
+    strategy: number,
+  ): Promise<BaseResponse<Strategy>> {
+    if (strategy < 1) throw new Error("Strategy ID must be >= 1");
+    return this.request<BaseResponse<Strategy>>(
+      this.config.ENDPOINTS.STRATEGY(strategy),
       {
         method: "DELETE",
         token,

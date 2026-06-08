@@ -119,6 +119,16 @@ export const queryKeys = {
     communities: (filters?: { language?: string | undefined }) =>
       [...sudojoBase(), "communities", filters] as const,
 
+    // Strategies
+    /** Key for the strategies list query. */
+    strategies: () => [...sudojoBase(), "strategies"] as const,
+    /** Key for a specific strategy by ID. */
+    strategy: (strategy: number) =>
+      [...sudojoBase(), "strategies", strategy] as const,
+    /** Key for a specific strategy by stub. */
+    strategyByStub: (stub: string) =>
+      [...sudojoBase(), "strategies", "stub", stub] as const,
+
     // Gamification
     /** Key for the user's gamification stats (points, level, badges). */
     gamificationStats: () =>

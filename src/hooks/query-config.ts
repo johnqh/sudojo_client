@@ -55,4 +55,7 @@ export const STALE_TIMES = {
 
   /** Communities - admin-managed reference data that rarely changes (10 min). */
   COMMUNITIES: 10 * 60 * 1000, // 10 minutes
+
+  /** Strategies - admin-managed reference data that rarely changes (10 min). */
+  STRATEGIES: 10 * 60 * 1000, // 10 minutes
 } as const;

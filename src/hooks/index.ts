@@ -134,6 +134,18 @@ export {
 } from "./use-sudojo-communities";
 
 // ============================================================================
+// Strategy hooks
+// ============================================================================
+
+export {
+  useSudojoStrategies,
+  useSudojoStrategyByStub,
+  useSudojoCreateStrategy,
+  useSudojoDeleteStrategy,
+  useSudojoUpdateStrategy,
+} from "./use-sudojo-strategies";
+
+// ============================================================================
 // Invalidation utilities
 // ============================================================================
 

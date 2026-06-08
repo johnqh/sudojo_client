@@ -74,6 +74,12 @@ export {
   useSudojoCreateCommunity,
   useSudojoDeleteCommunity,
   useSudojoUpdateCommunity,
+  // Strategies
+  useSudojoStrategies,
+  useSudojoStrategyByStub,
+  useSudojoCreateStrategy,
+  useSudojoDeleteStrategy,
+  useSudojoUpdateStrategy,
   // Gamification
   useSudojoBadgeDefinitions,
   useSudojoGamificationStats,
