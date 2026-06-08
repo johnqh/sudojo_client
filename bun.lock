@@ -5,12 +5,12 @@
     "": {
       "name": "@sudobility/sudojo_client",
       "dependencies": {
-        "@sudobility/sudojo_types": "^1.2.56",
+        "@sudobility/sudojo_types": "^1.2.61",
       },
       "devDependencies": {
         "@eslint/js": "^9.38.0",
         "@sudobility/di": "^1.5.57",
-        "@sudobility/sudojo_types": "^1.2.56",
+        "@sudobility/sudojo_types": "^1.2.61",
         "@sudobility/types": "^1.9.62",
         "@tanstack/react-query": "^5.90.5",
         "@testing-library/react": "^16.3.0",
@@ -201,7 +201,7 @@
 
     "@sudobility/di": ["@sudobility/di@1.5.57", "", { "peerDependencies": { "@notifee/react-native": ">=7.0.0", "@react-native-async-storage/async-storage": ">=1.19.0", "@react-native-community/netinfo": ">=9.0.0", "@react-native-firebase/analytics": ">=18.0.0", "@react-native-firebase/app": ">=18.0.0", "@react-native-firebase/messaging": ">=18.0.0", "@react-native-firebase/remote-config": ">=18.0.0", "@sudobility/types": "^1.9.62", "firebase": ">=11.0.0", "react": ">=18.0.0", "react-native": ">=0.70.0" }, "optionalPeers": ["@notifee/react-native", "@react-native-async-storage/async-storage", "@react-native-community/netinfo", "@react-native-firebase/analytics", "@react-native-firebase/app", "@react-native-firebase/messaging", "@react-native-firebase/remote-config", "firebase", "react-native"] }, "sha512-LYdbjTObAI9YOV4TCTXPp13ybrcq9V2BOPauGRyjHmp88HYJmWTGsCezZDgrggfauh1WgbEKOe4GcbkzrVgGqw=="],
 
-    "@sudobility/sudojo_types": ["@sudobility/sudojo_types@1.2.57", "", { "peerDependencies": { "@sudobility/types": "^1.9.62" } }, "sha512-heQgoiF8aB2RzXmpqbIodlFc0iUYfHrTtqBw24gVn07EZB9jdkytnHMAyEq/N88UXxbRA7gl4B2KMnRxCtaSRg=="],
+    "@sudobility/sudojo_types": ["@sudobility/sudojo_types@1.2.61", "", { "peerDependencies": { "@sudobility/types": "^1.9.62" } }, "sha512-j3RdL5SZrSSTZnWqy0kXE7+Mp7uRTckdG+fYOIeQHYvDXCfb6LG8O8T4Y7cDv52Atp5Ov38VublasVdXFpPvMA=="],
 
     "@sudobility/types": ["@sudobility/types@1.9.62", "", {}, "sha512-GOkz5oE7Fmlolba2aemBF2fKPtH4I2lHAjVta+fqZAoAV72DQaWYzVEjTwKZs/ACY/g9Z262IDa7lEh+IOrn7w=="],
 
