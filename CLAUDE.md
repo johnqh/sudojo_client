@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+> **Git policy — never auto-commit or auto-push.** Leave your work in the working tree.
+> Run `git commit`, `git push`, `gh pr create`, or `scripts/push_all.sh` **only when the user
+> explicitly asks in that turn**. Approval for an earlier change does not carry forward, and
+> finishing a task is not permission to commit it.
+
 This file provides context for AI assistants working on this codebase.
 
 ## Project Overview
@@ -213,3 +218,7 @@ npm publish             # Publish to npm (restricted access)
 1. Add method to `SudojoClient` class in `src/network/sudojo-client.ts`
 2. Create corresponding hook if needed
 3. Export from `src/index.ts`
+
+## Git Workflow
+
+- Do not use feature branches for code changes. Always stay on the current branch.
