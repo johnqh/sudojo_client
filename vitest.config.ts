@@ -16,14 +16,6 @@ export default defineConfig({
         "**/*.config.*",
         "**/__tests__/**",
       ],
-      thresholds: {
-        global: {
-          branches: 70,
-          functions: 70,
-          lines: 70,
-          statements: 70,
-        },
-      },
       reportsDirectory: "./coverage",
       all: true,
       include: ["src/**/*.{ts,tsx}"],

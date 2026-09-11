@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { hashKey } from "@tanstack/react-query";
 import { getSolverServiceKeys, solverQueryKeys } from "../query-keys";
 
 describe("solverQueryKeys", () => {
@@ -37,6 +38,20 @@ describe("solverQueryKeys", () => {
       expect(options["autoPencilmarks"]).toBe(true);
       expect(options["pencilmarks"]).toBe("1,2,3");
       expect(options["filters"]).toBe("hidden_singles");
+    });
+
+    // `techniques` is a comma-separated technique-ID list, not a bitmask, so
+    // technique 60 needs no BigInt handling and the key stays serializable.
+    it("should hash a technique-ID list stably", () => {
+      const options = {
+        original: "0".repeat(81),
+        user: "1".repeat(81),
+        techniques: "1,2,60",
+      };
+      const key = solverQueryKeys.solve(options);
+
+      expect((key[3] as Record<string, unknown>)["techniques"]).toBe("1,2,60");
+      expect(hashKey(key)).toBe(hashKey(solverQueryKeys.solve({ ...options })));
     });
 
     it("should produce different keys for different puzzle states", () => {

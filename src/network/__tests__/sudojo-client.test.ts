@@ -1161,6 +1161,217 @@ describe("SudojoClient", () => {
       expect(result.success).toBe(true);
     });
   });
+
+  // Bit N = technique id N. Technique 60 + technique 1 needs 61 bits, which a
+  // JS number cannot hold: Number(MASK) drops bit 1. The client must pass the
+  // decimal string (or a bigint) to sudojo_api without a Number round-trip.
+  describe("technique bitmasks beyond 2^53", () => {
+    const MASK = "1152921504606846978";
+    const MASK_BIGINT = (1n << 60n) | (1n << 1n);
+    // Number(MASK) is exactly 2^60 (bit 1 lost), but String() of that double
+    // is "1152921504606847000" = 2^60 + 24, which a BigInt parser reads as
+    // techniques 60, 4 and 3.
+    const LOSSY = String(Number(MASK));
+    const NUMBER_EXACT = "1152921504606846976"; // BigInt(Number(MASK))
+
+    const lastBody = (): Record<string, unknown> => {
+      const body = mockNetworkClient.getLastRequest()?.body;
+      expect(typeof body).toBe("string");
+      return JSON.parse(body as string) as Record<string, unknown>;
+    };
+
+    it("fixture is really beyond Number precision", () => {
+      expect(MASK_BIGINT.toString()).toBe(MASK);
+      expect(LOSSY).toBe("1152921504606847000");
+      expect(BigInt(Number(MASK)).toString()).toBe(NUMBER_EXACT);
+    });
+
+    it("getBoards sends a numeric mask > 2^53 as its exact value, not String(n)", async () => {
+      // The number already lost bit 1; it must not also invent bits 3 and 4.
+      await client.getBoards(TEST_TOKEN, {
+        level: undefined,
+        symmetrical: undefined,
+        limit: undefined,
+        offset: undefined,
+        techniques: Number(MASK),
+        technique_bit: Number(MASK),
+      });
+
+      expect(mockNetworkClient.getLastRequest()?.url).toBe(
+        `${BASE_URL}/api/v1/boards?techniques=${NUMBER_EXACT}&technique_bit=${NUMBER_EXACT}`,
+      );
+    });
+
+    it("getBoards sends small numeric masks as before", async () => {
+      await client.getBoards(TEST_TOKEN, {
+        level: 3,
+        symmetrical: undefined,
+        limit: 10,
+        offset: 0,
+        techniques: 6,
+        technique_bit: 2,
+      });
+
+      expect(mockNetworkClient.getLastRequest()?.url).toBe(
+        `${BASE_URL}/api/v1/boards?level=3&limit=10&offset=0&techniques=6&technique_bit=2`,
+      );
+    });
+
+    it("getBoards sends techniques / technique_bit strings unchanged", async () => {
+      await client.getBoards(TEST_TOKEN, {
+        level: undefined,
+        symmetrical: undefined,
+        limit: undefined,
+        offset: undefined,
+        techniques: MASK,
+        technique_bit: MASK,
+      });
+
+      expect(mockNetworkClient.getLastRequest()?.url).toBe(
+        `${BASE_URL}/api/v1/boards?techniques=${MASK}&technique_bit=${MASK}`,
+      );
+    });
+
+    it("getBoards sends bigint bitmasks as exact decimal strings", async () => {
+      await client.getBoards(TEST_TOKEN, {
+        level: undefined,
+        symmetrical: undefined,
+        limit: undefined,
+        offset: undefined,
+        techniques: MASK_BIGINT as unknown as string,
+        technique_bit: MASK_BIGINT as unknown as string,
+      });
+
+      expect(mockNetworkClient.getLastRequest()?.url).toBe(
+        `${BASE_URL}/api/v1/boards?techniques=${MASK}&technique_bit=${MASK}`,
+      );
+    });
+
+    it.each([
+      [
+        "createBoard",
+        (c: SudojoClient, techniques: string) =>
+          c.createBoard(TEST_TOKEN, {
+            level: 12,
+            symmetrical: undefined,
+            board: "0".repeat(81),
+            solution: "1".repeat(81),
+            techniques,
+          }),
+      ],
+      [
+        "updateBoard",
+        (c: SudojoClient, techniques: string) =>
+          c.updateBoard(TEST_TOKEN, VALID_UUID, {
+            level: undefined,
+            symmetrical: undefined,
+            board: undefined,
+            solution: undefined,
+            techniques,
+          }),
+      ],
+      [
+        "createDaily",
+        (c: SudojoClient, techniques: string) =>
+          c.createDaily(TEST_TOKEN, {
+            date: "2026-09-10",
+            board_uuid: undefined,
+            level: 12,
+            techniques,
+            board: "0".repeat(81),
+            solution: "1".repeat(81),
+          }),
+      ],
+      [
+        "updateDaily",
+        (c: SudojoClient, techniques: string) =>
+          c.updateDaily(TEST_TOKEN, VALID_UUID, {
+            date: undefined,
+            board_uuid: undefined,
+            level: undefined,
+            techniques,
+            board: undefined,
+            solution: undefined,
+          }),
+      ],
+    ])(
+      "%s sends a string techniques bitmask in the body unchanged",
+      async (_name, call) => {
+        await call(client, MASK);
+
+        expect(lastBody()["techniques"]).toBe(MASK);
+        expect(mockNetworkClient.getLastRequest()?.body).toContain(
+          `"techniques":"${MASK}"`,
+        );
+      },
+    );
+
+    it("createExample sends a string techniques_bitfield unchanged", async () => {
+      await client.createExample(TEST_TOKEN, {
+        board: "0".repeat(81),
+        pencilmarks: undefined,
+        solution: "1".repeat(81),
+        techniques_bitfield: MASK,
+        primary_technique: 60,
+        hint_data: undefined,
+        source_board_uuid: undefined,
+      });
+
+      expect(lastBody()["techniques_bitfield"]).toBe(MASK);
+    });
+
+    it("serializes a bigint in a request body as an exact decimal string", async () => {
+      await client.createBoard(TEST_TOKEN, {
+        level: 12,
+        symmetrical: undefined,
+        board: "0".repeat(81),
+        solution: "1".repeat(81),
+        techniques: MASK_BIGINT as unknown as string,
+      });
+
+      expect(lastBody()["techniques"]).toBe(MASK);
+    });
+
+    it("returns response techniques_bitmask strings unchanged", async () => {
+      mockNetworkClient.setMockResponse(
+        `${BASE_URL}/api/v1/boards/${VALID_UUID}`,
+        {
+          data: {
+            success: true,
+            data: {
+              uuid: VALID_UUID,
+              techniques: Number(MASK),
+              techniques_bitmask: MASK,
+            },
+            timestamp: new Date().toISOString(),
+          },
+        },
+        "GET",
+      );
+
+      const result = await client.getBoard(TEST_TOKEN, VALID_UUID);
+
+      expect(result.data?.techniques_bitmask).toBe(MASK);
+    });
+
+    it("solverSolve techniques is a technique-ID list, sent as-is", async () => {
+      mockNetworkClient.setDefaultResponse({
+        data: { success: true, data: {}, timestamp: "" },
+        status: 200,
+        ok: true,
+      });
+
+      await client.solverSolve(TEST_TOKEN, {
+        original: "0".repeat(81),
+        user: "0".repeat(81),
+        techniques: "1,2,60",
+      });
+
+      expect(mockNetworkClient.getLastRequest()?.url).toBe(
+        `${BASE_URL}/api/v1/solver/solve?original=${"0".repeat(81)}&techniques=1,2,60&user=${"0".repeat(81)}`,
+      );
+    });
+  });
 });
 
 describe("createSudojoClient", () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { hashKey } from "@tanstack/react-query";
 import { createQueryKey, getServiceKeys, queryKeys } from "../query-keys";
 
 describe("queryKeys", () => {
@@ -297,5 +298,81 @@ describe("getServiceKeys", () => {
 
   it("should match the queryKeys.sudojo.all() output", () => {
     expect(getServiceKeys()).toEqual(queryKeys.sudojo.all());
+  });
+});
+
+// React Query hashes keys with JSON.stringify, which throws on bigint and
+// collapses bitmasks beyond 2^53 when they are numbers. Keys that carry a
+// technique bitmask must carry it as a decimal string.
+describe("query key serializability", () => {
+  const MASK = "1152921504606846978"; // technique 60 + technique 1
+  const MASK_WITHOUT_BIT_1 = "1152921504606846976";
+
+  it("every factory key hashes without throwing", () => {
+    const k = queryKeys.sudojo;
+    const keys = [
+      k.all(),
+      k.health(),
+      k.levels(),
+      k.level(3),
+      k.techniques(),
+      k.techniques({ level: 3 }),
+      k.technique(60),
+      k.learning({ technique: 60, language_code: "en" }),
+      k.learningItem("uuid"),
+      k.boards(),
+      k.boards({ level: 3 }),
+      k.boardRandom({ level: 3 }),
+      k.board("uuid"),
+      k.dailies(),
+      k.dailyToday(),
+      k.dailyByDate("2026-09-10"),
+      k.daily("uuid"),
+      k.challenges({ level: 3, difficulty: "hard" }),
+      k.challengeRandom({ level: 3 }),
+      k.challenge("uuid"),
+      k.user("uid"),
+      k.userSubscription("uid"),
+      k.practiceCounts(),
+      k.practiceRandom(60),
+      k.communities({ language: "en" }),
+      k.strategies(),
+      k.strategy(1),
+      k.strategyByStub("wings"),
+      k.gamificationStats(),
+      k.gamificationBadges(),
+      k.gamificationHistory({ limit: 10, offset: 0 }),
+    ];
+    for (const key of keys) {
+      expect(() => hashKey(key)).not.toThrow();
+    }
+  });
+
+  it("a string bitmask in a key is stable and keeps bit 1", () => {
+    const key = createQueryKey("sudojo", "boards", { technique_bit: MASK });
+    const same = createQueryKey("sudojo", "boards", { technique_bit: MASK });
+    const other = createQueryKey("sudojo", "boards", {
+      technique_bit: MASK_WITHOUT_BIT_1,
+    });
+
+    expect(hashKey(key)).toBe(hashKey(same));
+    expect(hashKey(key)).not.toBe(hashKey(other));
+    expect(hashKey(key)).toContain(`"${MASK}"`);
+  });
+
+  it("numeric bitmasks beyond 2^53 collide, so keys must not use them", () => {
+    expect(hashKey(["sudojo", "boards", { technique_bit: Number(MASK) }])).toBe(
+      hashKey([
+        "sudojo",
+        "boards",
+        { technique_bit: Number(MASK_WITHOUT_BIT_1) },
+      ]),
+    );
+  });
+
+  it("a bigint in a key throws, so keys must not use bigint", () => {
+    expect(() => hashKey(["sudojo", "boards", { technique_bit: 1n }])).toThrow(
+      TypeError,
+    );
   });
 });

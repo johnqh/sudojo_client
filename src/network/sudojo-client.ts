@@ -184,6 +184,31 @@ const createURLSearchParams = () => {
   };
 };
 
+/**
+ * `JSON.stringify` replacer that sends a `bigint` as its exact base-10 string.
+ *
+ * Technique bitmasks (bit N = technique N, up to 61 bits) don't fit in a JS
+ * number, so `sudojo_api` accepts them as decimal strings. Plain
+ * `JSON.stringify` throws on a `bigint`, and converting through `Number` would
+ * drop the low bits.
+ */
+const bigintAsString = (_key: string, value: unknown): unknown =>
+  typeof value === "bigint" ? value.toString(10) : value;
+
+/**
+ * Format a technique bitmask for a query string without losing bits.
+ *
+ * Decimal strings and bigints are sent exactly. An integer number goes through
+ * `BigInt`, because `String(n)` rounds anything above 2^53 to a different
+ * decimal: `String(2 ** 60)` is "1152921504606847000" (2^60 + 24), which the
+ * API would read as techniques 60, 4 and 3. Anything else goes through
+ * `String()` unchanged, and `sudojo_api` rejects it with a 400.
+ */
+const bitmaskQueryValue = (value: number | string | bigint | null): string =>
+  typeof value === "number" && Number.isInteger(value)
+    ? BigInt(value).toString(10)
+    : String(value);
+
 // =============================================================================
 // API Configuration Factory
 // =============================================================================
@@ -365,7 +390,7 @@ export class SudojoClient {
 
     // Add body for POST/PUT/DELETE requests
     if (options.body && options.method !== "GET") {
-      requestOptions.body = JSON.stringify(options.body);
+      requestOptions.body = JSON.stringify(options.body, bigintAsString);
     }
 
     // Add timeout if specified
@@ -635,11 +660,16 @@ export class SudojoClient {
     if (queryParams?.offset !== undefined) {
       params.append("offset", String(queryParams.offset));
     }
+    // Bitmasks exceed 2^53 once any technique ID >= 54 is set. Never convert
+    // them with Number() or String(number).
     if (queryParams?.techniques !== undefined) {
-      params.append("techniques", String(queryParams.techniques));
+      params.append("techniques", bitmaskQueryValue(queryParams.techniques));
     }
     if (queryParams?.technique_bit !== undefined) {
-      params.append("technique_bit", String(queryParams.technique_bit));
+      params.append(
+        "technique_bit",
+        bitmaskQueryValue(queryParams.technique_bit),
+      );
     }
 
     const query = params.toString();
@@ -1140,6 +1170,7 @@ export class SudojoClient {
       autopencilmarks: options.autoPencilmarks,
       pencilmarks: options.pencilmarks,
       filters: options.filters,
+      // Comma-separated technique IDs ("1,2,60"), not a bitmask
       techniques: options.techniques,
     });
 
