@@ -17,6 +17,13 @@ export { STALE_TIMES } from "./query-config";
 export { useSudojoHealth } from "./use-sudojo-health";
 
 // ============================================================================
+// OCR hook
+// ============================================================================
+
+export { useSudojoOcrExtract } from "./use-sudojo-ocr";
+export type { OcrExtractVariables } from "./use-sudojo-ocr";
+
+// ============================================================================
 // Level hooks
 // ============================================================================
 

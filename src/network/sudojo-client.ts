@@ -37,6 +37,7 @@ import {
   type Level,
   type LevelCreateRequest,
   type LevelUpdateRequest,
+  type OCRExtractData,
   type Optional,
   type PointTransaction,
   type PracticesBulkDeleteData,
@@ -256,6 +257,9 @@ const createApiConfig = (baseUrl: string) => ({
     SOLVER_SOLVE: "/api/v1/solver/solve",
     SOLVER_VALIDATE: "/api/v1/solver/validate",
     SOLVER_GENERATE: "/api/v1/solver/generate",
+
+    // OCR
+    OCR_EXTRACT: "/api/v1/ocr/extract",
 
     // Practices
     PRACTICES: "/api/v1/practices",
@@ -1241,6 +1245,45 @@ export class SudojoClient {
     });
 
     return this.request<BaseResponse<GenerateData>>(url, { token });
+  }
+
+  // ===========================================================================
+  // OCR
+  // ===========================================================================
+
+  /**
+   * Read a Sudoku board from a photo or screenshot.
+   *
+   * The API runs the sudojo_ocr_ml model service and falls back to its own
+   * Tesseract pipeline, so every client gets the same recognition without
+   * bundling an OCR engine.
+   *
+   * @param token - Auth token
+   * @param image - The image as base64, with or without a `data:` URL prefix
+   * @param options.timeout - Request timeout in ms (default 60000). The server
+   *   may try the model service and then Tesseract, so this is well above the
+   *   default request timeout.
+   */
+  async extractOcr(
+    token: string,
+    image: string,
+    options: { timeout?: Optional<number> } = {},
+  ): Promise<BaseResponse<OCRExtractData>> {
+    // Callers hold images as canvas/file data URLs; the API wants raw base64.
+    const base64 = image.replace(/^data:[^;,]*;base64,/, "").trim();
+    if (!base64) {
+      throw new Error("extractOcr: image is empty");
+    }
+
+    return this.request<BaseResponse<OCRExtractData>>(
+      this.config.ENDPOINTS.OCR_EXTRACT,
+      {
+        method: "POST",
+        body: { image: base64 },
+        token,
+        timeout: options.timeout ?? 60000,
+      },
+    );
   }
 
   // ===========================================================================

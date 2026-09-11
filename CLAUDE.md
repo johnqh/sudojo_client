@@ -12,7 +12,7 @@ This file provides context for AI assistants working on this codebase.
 `@sudobility/sudojo_client` is the TypeScript API client library for the Sudojo API (`sudojo_api`). It is the integration layer between Sudoku apps and the backend, providing:
 
 - **`SudojoClient` class**: 67 typed methods covering every `/api/v1/...` resource the apps use
-- **React Query hooks**: 57 `useSudojo*` hooks in 13 files, plus 3 `useSolver*` hooks
+- **React Query hooks**: 58 `useSudojo*` hooks in 14 files, plus 3 `useSolver*` hooks
 - **Solver integration** (`/api/v1/solver/*` proxy), with `HintAccessDeniedError` for HTTP 402
 - **Solution decryption** (AES-256-GCM) for `enc:`-prefixed `solution` fields
 - **Query key factories**, `STALE_TIMES`, and cache invalidation utilities
@@ -79,7 +79,7 @@ src/
 │   │                              #   createURLSearchParams, configureSolutionKey/decryption
 │   ├── index.ts
 │   └── __tests__/sudojo-client.test.ts
-├── hooks/                         # 57 React Query hooks
+├── hooks/                         # 58 React Query hooks
 │   ├── query-keys.ts              # queryKeys.sudojo.*, createQueryKey, getServiceKeys, QueryKey
 │   ├── query-config.ts            # STALE_TIMES
 │   ├── use-sudojo-{health,levels,techniques,learning,boards,dailies,challenges,
@@ -113,9 +113,20 @@ tsconfig.json / tsconfig.build.json / vitest.config.ts / eslint.config.js / .pre
 | Practices | `useSudojoPracticeCounts`, `useSudojoRandomPractice`, `useSudojoCreatePractice`, `useSudojoDeleteAllPractices`, `useSudojoRegeneratePracticeHints` |
 | Communities / Strategies | `useSudojoCommunities`, `useSudojo{Create,Update,Delete}Community`; `useSudojoStrategies`, `useSudojoStrategyByStub`, `useSudojo{Create,Update,Delete}Strategy` |
 | Gamification | `useSudojoGamificationStats`, `useSudojoBadgeDefinitions`, `useSudojoPointHistory`, `useSudojoPlayStart`, `useSudojoPlayFinish` |
-| Other | `useSudojoHealth`, `useSudojoInvalidation`, `useSolverSolve`, `useSolverValidate`, `useSolverGenerate` |
+| Other | `useSudojoHealth`, `useSudojoInvalidation`, `useSudojoOcrExtract`, `useSolverSolve`, `useSolverValidate`, `useSolverGenerate` |
 
-There is no `exports` map, only `main`/`types` pointing at `dist/index.js`. Anything not in `src/index.ts` is effectively private.
+The `exports` map has two entries: `.` (`dist/index.js` - hooks included, so React and
+`@tanstack/react-query` must be present) and `./network` (`dist/network/index.js` - `SudojoClient`
+only, no React). Node consumers such as `sudojo_bot` import the `./network` entry. Anything not in
+`src/index.ts` or `src/network/index.ts` is effectively private.
+
+### OCR
+
+`SudojoClient.extractOcr(token, image, { timeout })` posts an image to `/api/v1/ocr/extract`; the
+hook is `useSudojoOcrExtract`. It strips a `data:` URL prefix, rejects an empty image, and defaults
+to a 60s timeout because the API may try the sudojo_ocr_ml model service and then its own Tesseract
+fallback. This is the single OCR path for every frontend - the web app, the RN app, the extension
+and the bot no longer bundle an OCR engine.
 
 ## Key Patterns
 

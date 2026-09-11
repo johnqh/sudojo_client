@@ -20,6 +20,7 @@ export {
   STALE_TIMES,
   // Health
   useSudojoHealth,
+  useSudojoOcrExtract,
   // Levels
   useSudojoCreateLevel,
   useSudojoDeleteLevel,
@@ -90,6 +91,7 @@ export {
   useSudojoInvalidation,
 } from "./hooks";
 export type { QueryKey } from "./hooks";
+export type { OcrExtractVariables } from "./hooks";
 
 // Solver hooks
 export {
