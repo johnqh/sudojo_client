@@ -5,7 +5,11 @@
 import { useMemo } from "react";
 import { useMutation, UseMutationResult } from "@tanstack/react-query";
 import type { NetworkClient } from "@sudobility/types";
-import type { BaseResponse, OCRExtractData } from "@sudobility/sudojo_types";
+import type {
+  BaseResponse,
+  OCRExtractData,
+  OcrSource,
+} from "@sudobility/sudojo_types";
 import { SudojoClient } from "../network/sudojo-client";
 
 /** Arguments for one OCR extraction. */
@@ -13,6 +17,11 @@ export interface OcrExtractVariables {
   token: string;
   /** The image as base64, with or without a `data:` URL prefix. */
   image: string;
+  /**
+   * Where the image came from. Camera captures go straight to paddle_ocr;
+   * everything else prefers the whole-board model. Defaults to "library".
+   */
+  source?: OcrSource;
   /** Request timeout in ms (default 60000). */
   timeout?: number;
 }
@@ -20,9 +29,9 @@ export interface OcrExtractVariables {
 /**
  * Hook to read a Sudoku board from a photo or screenshot.
  *
- * Recognition happens server-side: `sudojo_api` calls the sudojo_ocr_ml model
- * service and falls back to its own Tesseract pipeline, so no client bundles an
- * OCR engine. A board with too few digits comes back as a 422 rather than a
+ * Recognition happens server-side: `sudojo_api` dispatches to the sudojo_ocr_ml
+ * model service or paddle_ocr by image source, so no client bundles an OCR
+ * engine. A board with too few digits comes back as an error rather than a
  * guess.
  *
  * There is nothing to cache or invalidate - each call reads a different image -
@@ -53,7 +62,12 @@ export const useSudojoOcrExtract = (
   );
 
   return useMutation({
-    mutationFn: async ({ token, image, timeout }: OcrExtractVariables) =>
-      client.extractOcr(token, image, { timeout }),
+    mutationFn: async ({
+      token,
+      image,
+      source,
+      timeout,
+    }: OcrExtractVariables) =>
+      client.extractOcr(token, image, { source, timeout }),
   });
 };

@@ -38,6 +38,7 @@ import {
   type LevelCreateRequest,
   type LevelUpdateRequest,
   type OCRExtractData,
+  type OcrSource,
   type Optional,
   type PointTransaction,
   type PracticesBulkDeleteData,
@@ -1254,20 +1255,20 @@ export class SudojoClient {
   /**
    * Read a Sudoku board from a photo or screenshot.
    *
-   * The API runs the sudojo_ocr_ml model service and falls back to its own
-   * Tesseract pipeline, so every client gets the same recognition without
-   * bundling an OCR engine.
+   * Recognition happens server-side, so no client bundles an OCR engine.
    *
    * @param token - Auth token
    * @param image - The image as base64, with or without a `data:` URL prefix
+   * @param options.source - Where the image came from. Camera captures go
+   *   straight to paddle_ocr; everything else prefers the whole-board model and
+   *   falls back to paddle. Defaults to "library".
    * @param options.timeout - Request timeout in ms (default 60000). The server
-   *   may try the model service and then Tesseract, so this is well above the
-   *   default request timeout.
+   *   may try two backends, so this is well above the default request timeout.
    */
   async extractOcr(
     token: string,
     image: string,
-    options: { timeout?: Optional<number> } = {},
+    options: { source?: Optional<OcrSource>; timeout?: Optional<number> } = {},
   ): Promise<BaseResponse<OCRExtractData>> {
     // Callers hold images as canvas/file data URLs; the API wants raw base64.
     const base64 = image.replace(/^data:[^;,]*;base64,/, "").trim();
@@ -1279,7 +1280,7 @@ export class SudojoClient {
       this.config.ENDPOINTS.OCR_EXTRACT,
       {
         method: "POST",
-        body: { image: base64 },
+        body: { image: base64, source: options.source ?? "library" },
         token,
         timeout: options.timeout ?? 60000,
       },

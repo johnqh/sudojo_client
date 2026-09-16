@@ -88,4 +88,24 @@ describe("SudojoClient.extractOcr", () => {
       client.extractOcr(TEST_TOKEN, "data:image/png;base64,"),
     ).rejects.toThrow(/image/i);
   });
+
+  // The API routes camera captures straight to paddle_ocr, so the source has
+  // to survive the trip.
+  it("sends the source hint when given", async () => {
+    await client.extractOcr(TEST_TOKEN, BASE64, { source: "camera" });
+
+    const body = JSON.parse(
+      mockNetworkClient.getLastRequest()?.options?.body as string,
+    );
+    expect(body).toEqual({ image: BASE64, source: "camera" });
+  });
+
+  it("defaults to library when no source is given", async () => {
+    await client.extractOcr(TEST_TOKEN, BASE64);
+
+    const body = JSON.parse(
+      mockNetworkClient.getLastRequest()?.options?.body as string,
+    );
+    expect(body).toEqual({ image: BASE64, source: "library" });
+  });
 });
