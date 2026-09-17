@@ -45,7 +45,6 @@
   "devDependencies": {
     "@eslint/js": "^9.38.0",
     "@sudobility/di": "^1.5.65",
-    "@sudobility/sudojo_types": "^1.2.61",
     "@sudobility/types": "^1.9.67",
     "@tanstack/react-query": "^5.90.5",
     "@testing-library/react": "^16.3.0",
@@ -70,7 +69,7 @@
     "url": "https://github.com/johnqh/sudojo_client.git"
   },
   "dependencies": {
-    "@sudobility/sudojo_types": "^1.2.61"
+    "@sudobility/sudojo_types": "^1.2.70"
   },
   "exports": {
     ".": {
