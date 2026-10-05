@@ -113,11 +113,7 @@ describe("queryKeys", () => {
 
     it("should return a specific board key", () => {
       const uuid = "12345678-1234-1234-1234-123456789abc";
-      expect(queryKeys.sudojo.board(uuid)).toEqual([
-        "sudojo",
-        "boards",
-        uuid,
-      ]);
+      expect(queryKeys.sudojo.board(uuid)).toEqual(["sudojo", "boards", uuid]);
     });
   });
 
@@ -145,11 +141,7 @@ describe("queryKeys", () => {
 
     it("should return a specific daily key", () => {
       const uuid = "12345678-1234-1234-1234-123456789abc";
-      expect(queryKeys.sudojo.daily(uuid)).toEqual([
-        "sudojo",
-        "dailies",
-        uuid,
-      ]);
+      expect(queryKeys.sudojo.daily(uuid)).toEqual(["sudojo", "dailies", uuid]);
     });
   });
 
@@ -165,11 +157,7 @@ describe("queryKeys", () => {
     it("should return challenges key with filters", () => {
       expect(
         queryKeys.sudojo.challenges({ level: 1, difficulty: "hard" }),
-      ).toEqual([
-        "sudojo",
-        "challenges",
-        { level: 1, difficulty: "hard" },
-      ]);
+      ).toEqual(["sudojo", "challenges", { level: 1, difficulty: "hard" }]);
     });
 
     it("should return challenge random key", () => {
@@ -282,12 +270,9 @@ describe("createQueryKey", () => {
   });
 
   it("should create a key with mixed types", () => {
-    expect(createQueryKey("custom", "endpoint", 42, { filter: "value" })).toEqual([
-      "custom",
-      "endpoint",
-      42,
-      { filter: "value" },
-    ]);
+    expect(
+      createQueryKey("custom", "endpoint", 42, { filter: "value" }),
+    ).toEqual(["custom", "endpoint", 42, { filter: "value" }]);
   });
 });
 
@@ -342,6 +327,16 @@ describe("query key serializability", () => {
       k.gamificationStats(),
       k.gamificationBadges(),
       k.gamificationHistory({ limit: 10, offset: 0 }),
+      k.techniqueByPath("x-wing"),
+      k.boards({ level: 1, limit: 10, offset: 0, techniques: MASK }),
+      k.boardCounts(),
+      k.boardCountsByTechnique(),
+      k.practice("uuid"),
+      k.examples({ technique: 3 }),
+      k.exampleCounts(),
+      k.exampleRandom({ technique: 3 }),
+      k.example("uuid"),
+      k.community("uuid"),
     ];
     for (const key of keys) {
       expect(() => hashKey(key)).not.toThrow();
@@ -374,5 +369,50 @@ describe("query key serializability", () => {
     expect(() => hashKey(["sudojo", "boards", { technique_bit: 1n }])).toThrow(
       TypeError,
     );
+  });
+});
+
+describe("keys added for hook coverage", () => {
+  const k = queryKeys.sudojo;
+
+  it("nest under their resource prefix so prefix invalidation reaches them", () => {
+    expect(k.techniqueByPath("x-wing")).toEqual([
+      "sudojo",
+      "techniques",
+      "path",
+      "x-wing",
+    ]);
+    expect(k.boardCounts()).toEqual(["sudojo", "boards", "counts"]);
+    expect(k.boardCountsByTechnique()).toEqual([
+      "sudojo",
+      "boards",
+      "counts",
+      "by-technique",
+    ]);
+    expect(k.practice("u")).toEqual(["sudojo", "practices", "u"]);
+    expect(k.examples({ technique: 3 })).toEqual([
+      "sudojo",
+      "examples",
+      { technique: 3 },
+    ]);
+    expect(k.exampleCounts()).toEqual(["sudojo", "examples", "counts"]);
+    expect(k.exampleRandom()).toEqual([
+      "sudojo",
+      "examples",
+      "random",
+      undefined,
+    ]);
+    expect(k.example("u")).toEqual(["sudojo", "examples", "u"]);
+    expect(k.community("u")).toEqual(["sudojo", "communities", "u"]);
+  });
+
+  it("boards key carries every filter", () => {
+    expect(
+      k.boards({ level: 2, limit: 5, offset: 10, technique_bit: "4" }),
+    ).toEqual([
+      "sudojo",
+      "boards",
+      { level: 2, limit: 5, offset: 10, technique_bit: "4" },
+    ]);
   });
 });

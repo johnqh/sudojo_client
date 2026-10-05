@@ -20,12 +20,19 @@ the `queryKeys.sudojo.` / `solverQueryKeys.` prefix.
 |---|---|---|---|---|
 | `useSudojoHealth()` | `getHealth()` → `GET /` | always (`options.enabled` passes through) | `HEALTH_STATUS` 1m | `health()` |
 | `useSudojoLevels(token)` | `getLevels` → `GET /api/v1/levels` | always | `LEVELS` 10m | `levels()` |
-| `useSudojoLevel(token, level)` | `getLevel` → `GET /api/v1/levels/:level` | `1 <= level <= 12` | 10m | `level(n)` |
+| `useSudojoLevel(token, level)` | `getLevel` → `GET /api/v1/levels/:level` | `isValidLevel(level)` (sudojo_types `MIN_LEVEL..MAX_LEVEL`, integer) | 10m | `level(n)` |
 | `useSudojoTechniques(token, {level}?)` | `getTechniques` → `GET /api/v1/techniques?level=` | always | `TECHNIQUES` 10m | `techniques({level})` |
 | `useSudojoTechnique(token, technique)` | `getTechnique` → `GET /api/v1/techniques/:technique` | `technique >= 1` | 10m | `technique(n)` |
+| `useSudojoTechniqueByPath(token, path)` | `getTechniqueByPath` → `GET /api/v1/techniques/path/:path` | `path` truthy | 10m | `techniqueByPath(path)` |
 | `useSudojoLearning(token, {technique, language_code}?)` | `getLearning` → `GET /api/v1/learning` | always | `LEARNING` 10m | `learning({...})` |
 | `useSudojoLearningItem(token, uuid)` | `getLearningItem` → `GET /api/v1/learning/:uuid` | `uuid` truthy | 10m | `learningItem(uuid)` |
-| `useSudojoBoards(token, {level}?)` | `getBoards` → `GET /api/v1/boards` | always | `BOARDS` 5m | `boards({level})` |
+| `useSudojoBoards(token, BoardQueryParams?)` | `getBoards` → `GET /api/v1/boards` | always | `BOARDS` 5m | `boards({level, symmetrical, limit, offset, techniques, technique_bit})` (masks as decimal strings) |
+| `useSudojoBoardCounts(token)` | `getBoardCounts` → `GET /api/v1/boards/counts` | always | `0` | `boardCounts()` |
+| `useSudojoBoardCountsByTechnique(token)` | `getBoardCountsByTechnique` → `GET /api/v1/boards/counts/by-technique` | always | `0` | `boardCountsByTechnique()` |
+| `useSudojoExamples(token, {technique}?)` | `getExamples` → `GET /api/v1/examples` | always | `EXAMPLES` 5m | `examples({technique})` |
+| `useSudojoExampleCounts(token)` | `getExampleCounts` → `GET /api/v1/examples/counts` | always | `0` | `exampleCounts()` |
+| `useSudojoRandomExample(token, {technique}?)` | `getRandomExample` → `GET /api/v1/examples/random` | always | `0` | `exampleRandom({technique})` |
+| `useSudojoExample(token, uuid)` | `getExample` → `GET /api/v1/examples/:uuid` | `uuid` truthy | 5m | `example(uuid)` |
 | `useSudojoRandomBoard(token, {level}?)` | `getRandomBoard` → `GET /api/v1/boards/random` | always | `Infinity`, no refetch on focus | `boardRandom({level})` |
 | `useSudojoBoard(token, uuid)` | `getBoard` → `GET /api/v1/boards/:uuid` | `uuid` truthy | 5m | `board(uuid)` |
 | `useSudojoDailies(token)` | `getDailies` → `GET /api/v1/dailies` | always | `DAILIES` 5m | `dailies()` |
@@ -39,15 +46,18 @@ the `queryKeys.sudojo.` / `solverQueryKeys.` prefix.
 | `useSudojoUserSubscription(token, userId, testMode?)` | `getUserSubscription` → `GET /api/v1/users/:userId/subscriptions[?testMode=true]` | `token && userId` | `USER_SUBSCRIPTION` 2m | `userSubscription(userId)` (no `testMode`) |
 | `useSudojoPracticeCounts(token)` | `getPracticeCounts` → `GET /api/v1/practices/counts` | always | `0` | `practiceCounts()` |
 | `useSudojoRandomPractice(token, technique)` | `getRandomPractice` → `GET /api/v1/practices/technique/:technique/random` | `technique >= 1` | `0` | `practiceRandom(n)` |
+| `useSudojoPractice(token, uuid)` | `getPractice` → `GET /api/v1/practices/:uuid` | `uuid` truthy | `PRACTICE` 5m | `practice(uuid)` |
 | `useSudojoCommunities(token, {language}?)` | `getCommunities` → `GET /api/v1/communities` | always | `COMMUNITIES` 10m | `communities({language})` |
+| `useSudojoCommunity(token, uuid)` | `getCommunity` → `GET /api/v1/communities/:uuid` | `uuid` truthy | 10m | `community(uuid)` |
 | `useSudojoStrategies(token)` | `getStrategies` → `GET /api/v1/strategies` | always | `STRATEGIES` 10m | `strategies()` |
+| `useSudojoStrategy(token, strategy)` | `getStrategy` → `GET /api/v1/strategies/:strategy` | `strategy >= 1` | 10m | `strategy(n)` |
 | `useSudojoStrategyByStub(token, stub)` | `getStrategyByStub` → `GET /api/v1/strategies/stub/:stub` | `stub` truthy | 10m | `strategyByStub(stub)` |
 | `useSudojoGamificationStats(token)` | `getGamificationStats` → `GET /api/v1/gamification/stats` | `token` | 2m (`USER_SUBSCRIPTION`) | `gamificationStats()` |
 | `useSudojoBadgeDefinitions()` | `getBadgeDefinitions()` → `GET /api/v1/gamification/badges` | always | 10m (`LEVELS`) | `gamificationBadges()` |
 | `useSudojoPointHistory(token, {limit, offset}?)` | `getPointHistory` → `GET /api/v1/gamification/history` | `token` | `0` | `gamificationHistory({...})` |
-| `useSolverSolve(token, SolveOptions)` | `solverSolve` → `GET /api/v1/solver/solve` | `token` | `SOLVER_STALE_TIMES.SOLVE` 1m | `solve({...})` |
-| `useSolverValidate(token, {original})` | `solverValidate` → `GET /api/v1/solver/validate` | always (no token needed) | `VALIDATE` 10m | `validate(original)` |
-| `useSolverGenerate(token, {symmetrical}?)` | `solverGenerate` → `GET /api/v1/solver/generate` | `token` | `GENERATE` 0 | `generate({symmetrical})` |
+| `useSolverSolve(token, SolveOptions)` | `solverSolve` → `GET /api/v1/solver/solve` | always (optional auth; `""` = anonymous) | `SOLVER_STALE_TIMES.SOLVE` 1m | `solve({...})` |
+| `useSolverValidate(token, {original, brutalForce?})` | `solverValidate` → `GET /api/v1/solver/validate` | always (no token needed) | `VALIDATE` 10m | `validate(original, brutalForce?)` (`brutalForce` appended only when set) |
+| `useSolverGenerate(token, {symmetrical}?)` | `solverGenerate` → `GET /api/v1/solver/generate` | always (public) | `GENERATE` 0 | `generate({symmetrical})` |
 
 ## Mutation hooks
 
@@ -68,29 +78,26 @@ the `queryKeys.sudojo.` / `solverQueryKeys.` prefix.
 | `useSudojoRegeneratePracticeHints` | `{token}` | `regeneratePracticeHints` → `POST /api/v1/practices/regenerate-hints` (600 s timeout) | none |
 | `useSudojoPlayStart` | `{token, data}` | `playStart` → `POST /api/v1/play/start` | none |
 | `useSudojoPlayFinish` | `{token, data}` | `playFinish` → `POST /api/v1/play/finish` | invalidate `gamificationStats()`, `["sudojo","gamification","history"]` |
+| `useSolverSolveMutation` | `SolverSolveVariables` = `{token?, options: SolveOptions}` | `solverSolve(token ?? "", options)` → `GET /api/v1/solver/solve` | none |
+| `useSolverValidateMutation` | `SolverValidateVariables` = `{token?, options: ValidateOptions}` | `solverValidate(token ?? "", options)` | none |
+| `useSolverGenerateMutation` | `SolverGenerateVariables` = `{token?, options?}` (or no argument) | `solverGenerate(token ?? "", options ?? {})` | none |
+| `useSudojoFetchBoards` | `FetchBoardsVariables` = `{token, queryParams?: BoardQueryParams}` | `getBoards(token, queryParams)` (all filters) | none (imperative fetch, not cached) |
+| `useSudojoUpdatePuzzleStats` | `{token}` | `updatePuzzleStats` → `POST /api/v1/boards/update-stats` | invalidate `["sudojo","levels"]`, `["sudojo","techniques"]` |
+| `useSudojo{Create,Update,Delete}Example` | `{token, data}` / `{token, uuid, data}` / `{token, uuid}` | `…Example` → `/api/v1/examples[/:uuid]` | invalidate `["sudojo","examples"]`; update also `example(uuid)`, delete removes it |
+| `useSudojoDeletePractice` | `{token, uuid}` | `deletePractice` → `DELETE /api/v1/practices/:uuid` | remove `practice(uuid)`, invalidate `practiceCounts()` |
+| `useSudojo{Create,Update,Delete}Badge` | `{token, data}` / `{token, badgeKey, data}` / `{token, badgeKey}` | `…Badge` → `/api/v1/gamification/badges[/:badgeKey]` | invalidate `gamificationBadges()`; delete also `gamificationStats()` |
+| `useSudojoDeleteUser` | `DeleteUserVariables` = `{token, userId, providerTokens?}` | `deleteUser` → `DELETE /api/v1/users/:userId` (throws on `success: false`) | remove `["sudojo","users",userId]`, `gamificationStats()`, history |
 
 `useSudojoInvalidation()` returns `invalidateAll`, `invalidateLevels`, `invalidateTechniques`,
 `invalidateLearning`, `invalidateBoards`, `invalidateDailies`, `invalidateChallenges`,
 `invalidateUsers`, `invalidatePractices`, `invalidateGamification`. Each invalidates the
 `["sudojo", <resource>]` prefix. There are no helpers for communities or strategies.
 
-## Client-only methods (no hook)
+## Coverage
 
-| Method | Endpoint |
-|---|---|
-| `getCommunity(token, uuid)` | `GET /api/v1/communities/:uuid` |
-| `getStrategy(token, strategy)` | `GET /api/v1/strategies/:strategy` |
-| `getExampleCounts(token)` | `GET /api/v1/examples/counts` |
-| `getExamples(token, {technique}?)` | `GET /api/v1/examples` |
-| `createExample(token, data)` | `POST /api/v1/examples` |
-| `getBoardCounts(token)` | `GET /api/v1/boards/counts` |
-| `getBoardCountsByTechnique(token)` | `GET /api/v1/boards/counts/by-technique` |
-| `updatePuzzleStats(token)` | `POST /api/v1/boards/update-stats` |
-
-`sudojo_api` routes with no client method: `POST /api/v1/ocr/extract`,
-`GET /api/v1/techniques/path/:path`, `GET /api/v1/examples/random`,
-`GET|PUT|DELETE /api/v1/examples/:uuid`, `GET|DELETE /api/v1/practices/:uuid`,
-`POST|PUT|DELETE /api/v1/gamification/badges[/:badgeKey]`, `DELETE /api/v1/users/:userId`.
+Every `SudojoClient` method has a hook, and every `sudojo_api` route has a client method.
+`SudojoClient` / `createSudojoClient` from the root entry are `@deprecated`: apps and
+sudojo_lib should use hooks. The `./network` entry stays for non-React consumers (sudojo_bot).
 
 ## Request details
 
@@ -98,28 +105,30 @@ the `queryKeys.sudojo.` / `solverQueryKeys.` prefix.
 
 | Method | Params |
 |---|---|
-| `getBoards` | `level`, `limit`, `offset`, `techniques`, `technique_bit` (bitmasks, sent losslessly; see [Technique bitmasks](#technique-bitmasks)). `useSudojoBoards` forwards only `level` |
+| `getBoards` | `level`, `limit`, `offset`, `techniques`, `technique_bit` (bitmasks, sent losslessly; see [Technique bitmasks](#technique-bitmasks)). `useSudojoBoards` forwards all of them |
 | `getRandomBoard` | `level`, `symmetrical`. `useSudojoRandomBoard` forwards only `level` |
 | `getChallenges` / `getRandomChallenge` | `level`, `difficulty` |
 | `getLearning` | `technique`, `language_code` |
 | `getTechniques` | `level` |
 | `getCommunities` | `language` |
-| `getExamples` | `technique` |
+| `getExamples` / `getRandomExample` | `technique` |
 | `getPointHistory` | `limit`, `offset` (omitted when `0`/falsy) |
 | `solverSolve` | `autopencilmarks`, `filters`, `original`, `pencilmarks`, `techniques`, `user` (keys sorted alphabetically, `undefined` dropped, commas left unencoded). Here `techniques` is a comma-separated technique-ID list (`"1,2,60"`), not a bitmask |
-| `solverValidate` | `original` |
+| `solverValidate` | `brutalForce` (only when set), `original` |
 | `solverGenerate` | `symmetrical` |
 
 **Validation thrown before any request** (`Error`, not a network call):
 
 | Rule | Methods |
 |---|---|
-| `level` must be 1–12 | `getLevel`, `updateLevel`, `deleteLevel` |
+| `isValidLevel(level)` (`MIN_LEVEL`–`MAX_LEVEL`, integer) | `getLevel`, `updateLevel`, `deleteLevel` |
 | `technique >= 1` | `getTechnique`, `updateTechnique`, `deleteTechnique`, `getRandomPractice` |
 | `strategy >= 1` | `getStrategy`, `updateStrategy`, `deleteStrategy` |
-| valid UUID (`validateUUID` from sudojo_types) | learning, board, daily, challenge, community `:uuid` methods |
+| valid UUID (`validateUUID` from sudojo_types) | learning, board, daily, challenge, community, example, practice `:uuid` methods |
+| `path` 1–255 chars | `getTechniqueByPath` |
+| `badgeKey` 1–100 chars | `updateBadge`, `deleteBadge` |
 | `date` matches `YYYY-MM-DD` | `getDailyByDate` |
-| `userId` 1–128 chars | `getUser`, `getUserSubscription` |
+| `userId` 1–128 chars | `getUser`, `getUserSubscription`, `deleteUser` |
 
 **Timeouts:** `solverSolve` and `solverValidate` use 120 s, and `regeneratePracticeHints` uses 600 s.
 All other calls use the `NetworkClient` default.
@@ -152,8 +161,10 @@ invalid values (negative, non-integer, `""`, signs, hex, exponent).
 - `request()` throws `Error("No data received from server")` when `response.data === undefined`.
   It does **not** check `response.ok`: a non-2xx response with a JSON body resolves as data unless
   the `NetworkClient` implementation throws.
+- `deleteUser` is the exception: it throws `Error(<API error>)` when the body has `success: false`
+  (409 active subscription, 410 already deleted, 403 token mismatch).
 - `solverSolve` bypasses `request()`. On `status === 402` with `error.code === "HINT_ACCESS_DENIED"`
-  it throws `HintAccessDeniedError` (`hintLevel`, `requiredEntitlement`, `userState`). On any other
+  it throws `HintAccessDeniedError` (deprecated dead path: `sudojo_api` never sends it) (`hintLevel`, `requiredEntitlement`, `userState`). On any other
   `!ok` it throws `Error("Failed to get hints from solver")`.
 - Every response body, solver responses included, goes through `decryptSolutionFields`. Any `solution`
   string starting with `enc:` is AES-GCM-decrypted once `configureSolutionKey(hex)` has been called.

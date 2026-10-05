@@ -175,3 +175,47 @@ export const useSudojoDeleteCommunity = (
     },
   });
 };
+
+/**
+ * Hook to fetch a single community by UUID.
+ *
+ * Public endpoint. Disabled when `uuid` is empty.
+ * Stale time: {@link STALE_TIMES.COMMUNITIES}.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param uuid - Community UUID. Query is disabled if empty.
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing a single Community object
+ */
+export const useSudojoCommunity = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+  token: string,
+  uuid: string,
+  options?: Omit<
+    UseQueryOptions<BaseResponse<Community>>,
+    "queryKey" | "queryFn"
+  >,
+): UseQueryResult<BaseResponse<Community>> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+
+  const queryFn = useCallback(async (): Promise<BaseResponse<Community>> => {
+    return client.getCommunity(token, uuid);
+  }, [client, token, uuid]);
+
+  const isEnabled =
+    !!uuid && (options?.enabled !== undefined ? options.enabled : true);
+
+  return useQuery({
+    queryKey: queryKeys.sudojo.community(uuid),
+    queryFn,
+    staleTime: STALE_TIMES.COMMUNITIES,
+    ...options,
+    enabled: isEnabled,
+  });
+};

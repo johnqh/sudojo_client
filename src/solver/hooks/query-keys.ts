@@ -39,11 +39,14 @@ export const solverQueryKeys = {
   }) => [...solverBase(), "solve", options] as const,
 
   /**
-   * Key for a puzzle validation query. Since validation is deterministic
-   * for a given original puzzle string, only the puzzle string is needed.
+   * Key for a puzzle validation query. Validation is deterministic for a
+   * given puzzle string; `brutalForce` is appended only when set, so keys
+   * without it are unchanged.
    */
-  validate: (original: string) =>
-    [...solverBase(), "validate", original] as const,
+  validate: (original: string, brutalForce?: boolean | undefined) =>
+    brutalForce === undefined
+      ? ([...solverBase(), "validate", original] as const)
+      : ([...solverBase(), "validate", original, { brutalForce }] as const),
 
   /**
    * Key for a puzzle generation query. Includes symmetry preference

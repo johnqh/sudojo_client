@@ -58,4 +58,10 @@ export const STALE_TIMES = {
 
   /** Strategies - admin-managed reference data that rarely changes (10 min). */
   STRATEGIES: 10 * 60 * 1000, // 10 minutes
+
+  /** Technique examples - admin-managed content (5 min). */
+  EXAMPLES: 5 * 60 * 1000, // 5 minutes
+
+  /** A single practice fetched by UUID - admin-managed content (5 min). */
+  PRACTICE: 5 * 60 * 1000, // 5 minutes
 } as const;

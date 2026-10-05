@@ -1,7 +1,10 @@
 import type { NetworkClient, UserInfoResponse } from "@sudobility/types";
 import {
   type BadgeDefinition,
+  type BadgeDefinitionCreateRequest,
+  type BadgeDefinitionUpdateRequest,
   type BaseResponse,
+  type ValidateOptions as BaseValidateOptions,
   type Board,
   type BoardCountsByTechniqueData,
   type BoardCountsData,
@@ -29,6 +32,7 @@ import {
   type GenerateOptions,
   type HealthCheckData,
   type HintAccessDeniedResponse,
+  isValidLevel,
   isValidUUID,
   type Learning,
   type LearningCreateRequest,
@@ -37,6 +41,8 @@ import {
   type Level,
   type LevelCreateRequest,
   type LevelUpdateRequest,
+  MAX_LEVEL,
+  MIN_LEVEL,
   type OCRExtractData,
   type OcrSource,
   type Optional,
@@ -54,6 +60,7 @@ import {
   type TechniqueExample,
   type TechniqueExampleCreateRequest,
   type TechniqueExampleQueryParams,
+  type TechniqueExampleUpdateRequest,
   type TechniquePractice,
   type TechniquePracticeCountItem,
   type TechniquePracticeCreateRequest,
@@ -61,13 +68,57 @@ import {
   type TechniqueUpdateRequest,
   type UpdateStatsData,
   type ValidateData,
-  type ValidateOptions,
   validateUUID,
 } from "@sudobility/sudojo_types";
 import { HintAccessDeniedError } from "../errors";
 
 // Re-export option types for convenience
-export type { SolveOptions, ValidateOptions, GenerateOptions };
+export type { SolveOptions, GenerateOptions };
+
+/**
+ * Options for `solverValidate`.
+ *
+ * Extends the sudojo_types `ValidateOptions` with `brutalForce`, which
+ * `GET /api/v1/solver/validate` passes through to the solver.
+ *
+ * TODO(sudojo_types): move `brutalForce` into `ValidateOptions` there.
+ */
+export type ValidateOptions = BaseValidateOptions & {
+  /**
+   * Verify uniqueness by brute force. The solver defaults to `true` when the
+   * parameter is omitted, so it is only sent when set.
+   */
+  brutalForce?: boolean | undefined;
+};
+
+/**
+ * `{ deleted: true }` body returned by `DELETE /api/v1/users/:userId` and
+ * `DELETE /api/v1/gamification/badges/:badgeKey`.
+ *
+ * TODO(sudojo_types): no shared type exists for this response yet.
+ */
+export interface DeletedData {
+  deleted: boolean;
+}
+
+/**
+ * Optional OAuth provider tokens for `DELETE /api/v1/users/:userId`. When
+ * given, the API revokes them while deleting the Firebase user.
+ *
+ * TODO(sudojo_types): no shared type exists for this request body yet.
+ */
+export interface DeleteUserRequest {
+  googleAccessToken?: string | undefined;
+  appleAuthorizationCode?: string | undefined;
+}
+
+const assertValidLevel = (level: number): void => {
+  if (!isValidLevel(level)) {
+    throw new Error(
+      `Invalid level: ${level}. Expected ${MIN_LEVEL}-${MAX_LEVEL}`,
+    );
+  }
+};
 
 // =============================================================================
 // Solution Decryption
@@ -206,7 +257,9 @@ const bigintAsString = (_key: string, value: unknown): unknown =>
  * API would read as techniques 60, 4 and 3. Anything else goes through
  * `String()` unchanged, and `sudojo_api` rejects it with a 400.
  */
-const bitmaskQueryValue = (value: number | string | bigint | null): string =>
+export const bitmaskQueryValue = (
+  value: number | string | bigint | null,
+): string =>
   typeof value === "number" && Number.isInteger(value)
     ? BigInt(value).toString(10)
     : String(value);
@@ -228,6 +281,8 @@ const createApiConfig = (baseUrl: string) => ({
     // Techniques
     TECHNIQUES: "/api/v1/techniques",
     TECHNIQUE: (technique: number) => `/api/v1/techniques/${technique}`,
+    TECHNIQUE_BY_PATH: (path: string) =>
+      `/api/v1/techniques/path/${encodeURIComponent(path)}`,
 
     // Learning
     LEARNING: "/api/v1/learning",
@@ -267,10 +322,13 @@ const createApiConfig = (baseUrl: string) => ({
     PRACTICES_COUNTS: "/api/v1/practices/counts",
     PRACTICE_RANDOM: (technique: number) =>
       `/api/v1/practices/technique/${technique}/random`,
+    PRACTICE: (uuid: string) => `/api/v1/practices/${uuid}`,
 
     // Examples
     EXAMPLES: "/api/v1/examples",
     EXAMPLES_COUNTS: "/api/v1/examples/counts",
+    EXAMPLES_RANDOM: "/api/v1/examples/random",
+    EXAMPLE: (uuid: string) => `/api/v1/examples/${uuid}`,
 
     // Boards counts
     BOARDS_COUNTS: "/api/v1/boards/counts",
@@ -284,6 +342,8 @@ const createApiConfig = (baseUrl: string) => ({
     // Gamification
     GAMIFICATION_STATS: "/api/v1/gamification/stats",
     GAMIFICATION_BADGES: "/api/v1/gamification/badges",
+    GAMIFICATION_BADGE: (badgeKey: string) =>
+      `/api/v1/gamification/badges/${encodeURIComponent(badgeKey)}`,
     GAMIFICATION_HISTORY: "/api/v1/gamification/history",
 
     // Communities
@@ -317,7 +377,8 @@ const createApiConfig = (baseUrl: string) => ({
  * - **Network errors**: Thrown by the underlying `NetworkClient` (e.g., connection refused, timeout)
  * - **Empty response**: Throws `Error("No data received from server")` when the server returns no data
  * - **Validation errors**: Thrown before the request for invalid parameters (e.g., invalid UUID, level out of range)
- * - **HTTP 402**: `solverSolve()` throws {@link HintAccessDeniedError} when the hint level exceeds the user's tier
+ * - **HTTP 402** (deprecated): `solverSolve()` throws {@link HintAccessDeniedError} on a 402
+ *   `HINT_ACCESS_DENIED`. Current `sudojo_api` never sends one.
  * - **Other HTTP errors**: Depend on the `NetworkClient` implementation - typically thrown as generic `Error`
  *
  * ## Authentication
@@ -328,6 +389,10 @@ const createApiConfig = (baseUrl: string) => ({
  * (subscriptions, gamification) require a valid token.
  *
  * ## Usage
+ *
+ * Apps and sudojo_lib should use the React Query hooks instead; direct client
+ * use is reserved for sudojo_client internals and non-React consumers of the
+ * `./network` entry (e.g. sudojo_bot).
  *
  * ```typescript
  * const client = new SudojoClient(networkClient, "https://api.sudojo.com");
@@ -433,9 +498,7 @@ export class SudojoClient {
   }
 
   async getLevel(token: string, level: number): Promise<BaseResponse<Level>> {
-    if (level < 1 || level > 12) {
-      throw new Error(`Invalid level: ${level}. Expected 1-12`);
-    }
+    assertValidLevel(level);
     return this.request<BaseResponse<Level>>(
       this.config.ENDPOINTS.LEVEL(level),
       { token },
@@ -458,9 +521,7 @@ export class SudojoClient {
     level: number,
     data: LevelUpdateRequest,
   ): Promise<BaseResponse<Level>> {
-    if (level < 1 || level > 12) {
-      throw new Error(`Invalid level: ${level}. Expected 1-12`);
-    }
+    assertValidLevel(level);
     return this.request<BaseResponse<Level>>(
       this.config.ENDPOINTS.LEVEL(level),
       {
@@ -475,9 +536,7 @@ export class SudojoClient {
     token: string,
     level: number,
   ): Promise<BaseResponse<Level>> {
-    if (level < 1 || level > 12) {
-      throw new Error(`Invalid level: ${level}. Expected 1-12`);
-    }
+    assertValidLevel(level);
     return this.request<BaseResponse<Level>>(
       this.config.ENDPOINTS.LEVEL(level),
       {
@@ -516,6 +575,24 @@ export class SudojoClient {
     }
     return this.request<BaseResponse<Technique>>(
       this.config.ENDPOINTS.TECHNIQUE(technique),
+      { token },
+    );
+  }
+
+  /**
+   * Get a technique by its URL path slug (e.g. "naked-single").
+   */
+  async getTechniqueByPath(
+    token: string,
+    path: string,
+  ): Promise<BaseResponse<Technique>> {
+    if (!path || path.length > 255) {
+      throw new Error(
+        `Invalid technique path: "${path}". Expected 1-255 chars`,
+      );
+    }
+    return this.request<BaseResponse<Technique>>(
+      this.config.ENDPOINTS.TECHNIQUE_BY_PATH(path),
       { token },
     );
   }
@@ -960,6 +1037,40 @@ export class SudojoClient {
     });
   }
 
+  /**
+   * Delete (soft-delete) the signed-in user's account.
+   *
+   * The API checks that `token` belongs to `userId`, refuses while a
+   * subscription is active (409) or when already deleted (410), marks the
+   * account deleted, revokes any provider tokens given, and deletes the
+   * Firebase user server-side.
+   *
+   * Unlike most methods, this throws when the API answers `success: false`,
+   * with the API's error message, so callers can't mistake a refusal for a
+   * deletion.
+   */
+  async deleteUser(
+    token: string,
+    userId: string,
+    providerTokens?: DeleteUserRequest,
+  ): Promise<BaseResponse<DeletedData>> {
+    if (!userId || userId.length === 0 || userId.length > 128) {
+      throw new Error(`Invalid userId: "${userId}". Expected 1-128 characters`);
+    }
+    const result = await this.request<BaseResponse<DeletedData>>(
+      this.config.ENDPOINTS.USER(userId),
+      {
+        method: "DELETE",
+        body: { ...providerTokens },
+        token,
+      },
+    );
+    if (result.success === false) {
+      throw new Error(result.error || "Failed to delete account");
+    }
+    return result;
+  }
+
   // ===========================================================================
   // Practices
   // ===========================================================================
@@ -989,6 +1100,37 @@ export class SudojoClient {
     return this.request<BaseResponse<TechniquePractice>>(
       this.config.ENDPOINTS.PRACTICE_RANDOM(technique),
       { token },
+    );
+  }
+
+  /**
+   * Get a single practice by UUID
+   */
+  async getPractice(
+    token: string,
+    uuid: string,
+  ): Promise<BaseResponse<TechniquePractice>> {
+    const validatedUuid = validateUUID(uuid, "Practice UUID");
+    return this.request<BaseResponse<TechniquePractice>>(
+      this.config.ENDPOINTS.PRACTICE(validatedUuid),
+      { token },
+    );
+  }
+
+  /**
+   * Delete a single practice (admin only)
+   */
+  async deletePractice(
+    token: string,
+    uuid: string,
+  ): Promise<BaseResponse<TechniquePractice>> {
+    const validatedUuid = validateUUID(uuid, "Practice UUID");
+    return this.request<BaseResponse<TechniquePractice>>(
+      this.config.ENDPOINTS.PRACTICE(validatedUuid),
+      {
+        method: "DELETE",
+        token,
+      },
     );
   }
 
@@ -1093,6 +1235,78 @@ export class SudojoClient {
     );
   }
 
+  /**
+   * Get a random example, optionally filtered by primary technique
+   */
+  async getRandomExample(
+    token: string,
+    queryParams?: TechniqueExampleQueryParams,
+  ): Promise<BaseResponse<TechniqueExample>> {
+    const params = createURLSearchParams();
+
+    if (
+      queryParams?.technique !== undefined &&
+      queryParams.technique !== null
+    ) {
+      params.append("technique", String(queryParams.technique));
+    }
+
+    const query = params.toString();
+    const endpoint = `${this.config.ENDPOINTS.EXAMPLES_RANDOM}${query ? `?${query}` : ""}`;
+
+    return this.request<BaseResponse<TechniqueExample>>(endpoint, { token });
+  }
+
+  /**
+   * Get a single example by UUID
+   */
+  async getExample(
+    token: string,
+    uuid: string,
+  ): Promise<BaseResponse<TechniqueExample>> {
+    const validatedUuid = validateUUID(uuid, "Example UUID");
+    return this.request<BaseResponse<TechniqueExample>>(
+      this.config.ENDPOINTS.EXAMPLE(validatedUuid),
+      { token },
+    );
+  }
+
+  /**
+   * Update an example (admin only)
+   */
+  async updateExample(
+    token: string,
+    uuid: string,
+    data: TechniqueExampleUpdateRequest,
+  ): Promise<BaseResponse<TechniqueExample>> {
+    const validatedUuid = validateUUID(uuid, "Example UUID");
+    return this.request<BaseResponse<TechniqueExample>>(
+      this.config.ENDPOINTS.EXAMPLE(validatedUuid),
+      {
+        method: "PUT",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  /**
+   * Delete an example (admin only)
+   */
+  async deleteExample(
+    token: string,
+    uuid: string,
+  ): Promise<BaseResponse<TechniqueExample>> {
+    const validatedUuid = validateUUID(uuid, "Example UUID");
+    return this.request<BaseResponse<TechniqueExample>>(
+      this.config.ENDPOINTS.EXAMPLE(validatedUuid),
+      {
+        method: "DELETE",
+        token,
+      },
+    );
+  }
+
   // ===========================================================================
   // Board Counts
   // ===========================================================================
@@ -1162,8 +1376,16 @@ export class SudojoClient {
   }
 
   /**
-   * Get hints for solving a Sudoku puzzle
-   * @throws {HintAccessDeniedError} When hint level exceeds user's subscription tier
+   * Get hints for solving a Sudoku puzzle.
+   *
+   * `/solver/solve` accepts anonymous calls; with a token, hints on the active
+   * play session earn points. Pass `""` for no token.
+   *
+   * Hints are unrestricted server-side (owner decision, see sudojo_api
+   * CLAUDE.md "Auth & Access Model"), so the API never sends a 402.
+   *
+   * @throws {HintAccessDeniedError} Deprecated: only on a 402
+   *   `HINT_ACCESS_DENIED`, which current `sudojo_api` never sends.
    */
   async solverSolve(
     token: string,
@@ -1174,6 +1396,8 @@ export class SudojoClient {
       user: options.user,
       autopencilmarks: options.autoPencilmarks,
       pencilmarks: options.pencilmarks,
+      // @deprecated `filters` is ignored by sudojo_api and the solver; it is
+      // still sent so the request is unchanged. Use `techniques`.
       filters: options.filters,
       // Comma-separated technique IDs ("1,2,60"), not a bitmask
       techniques: options.techniques,
@@ -1197,7 +1421,12 @@ export class SudojoClient {
       timeout: 120000,
     });
 
-    // Check for hint access denied (402)
+    /**
+     * @deprecated Dead path: sudojo_api never sends 402 HINT_ACCESS_DENIED
+     * (hints are unrestricted server-side by owner decision). Kept so the
+     * behaviour is unchanged for clients that still catch it; remove in a
+     * breaking release together with HintAccessDeniedError.
+     */
     if (response.status === 402 && response.data) {
       const errorResponse = response.data as HintAccessDeniedResponse;
       if (errorResponse.error?.code === "HINT_ACCESS_DENIED") {
@@ -1224,6 +1453,7 @@ export class SudojoClient {
     options: ValidateOptions,
   ): Promise<BaseResponse<ValidateData>> {
     const url = this.buildSolverUrl(this.config.ENDPOINTS.SOLVER_VALIDATE, {
+      brutalForce: options.brutalForce,
       original: options.original,
     });
 
@@ -1498,6 +1728,64 @@ export class SudojoClient {
   async getBadgeDefinitions(): Promise<BaseResponse<BadgeDefinition[]>> {
     return this.request<BaseResponse<BadgeDefinition[]>>(
       this.config.ENDPOINTS.GAMIFICATION_BADGES,
+    );
+  }
+
+  /**
+   * Create a badge definition (admin only)
+   */
+  async createBadge(
+    token: string,
+    data: BadgeDefinitionCreateRequest,
+  ): Promise<BaseResponse<BadgeDefinition>> {
+    return this.request<BaseResponse<BadgeDefinition>>(
+      this.config.ENDPOINTS.GAMIFICATION_BADGES,
+      {
+        method: "POST",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  /**
+   * Update a badge definition by key (admin only)
+   */
+  async updateBadge(
+    token: string,
+    badgeKey: string,
+    data: BadgeDefinitionUpdateRequest,
+  ): Promise<BaseResponse<BadgeDefinition>> {
+    if (!badgeKey || badgeKey.length > 100) {
+      throw new Error(`Invalid badgeKey: "${badgeKey}". Expected 1-100 chars`);
+    }
+    return this.request<BaseResponse<BadgeDefinition>>(
+      this.config.ENDPOINTS.GAMIFICATION_BADGE(badgeKey),
+      {
+        method: "PUT",
+        body: data as unknown as Record<string, unknown>,
+        token,
+      },
+    );
+  }
+
+  /**
+   * Delete a badge definition by key (admin only). The API also deletes every
+   * user's award of that badge.
+   */
+  async deleteBadge(
+    token: string,
+    badgeKey: string,
+  ): Promise<BaseResponse<DeletedData>> {
+    if (!badgeKey || badgeKey.length > 100) {
+      throw new Error(`Invalid badgeKey: "${badgeKey}". Expected 1-100 chars`);
+    }
+    return this.request<BaseResponse<DeletedData>>(
+      this.config.ENDPOINTS.GAMIFICATION_BADGE(badgeKey),
+      {
+        method: "DELETE",
+        token,
+      },
     );
   }
 

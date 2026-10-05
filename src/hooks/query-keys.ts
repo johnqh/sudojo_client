@@ -32,6 +32,19 @@
 
 const sudojoBase = () => ["sudojo"] as const;
 
+/**
+ * Board list filters as they appear in a query key. Technique masks are
+ * decimal strings (see `queryKeys.sudojo.boards`).
+ */
+export interface BoardsKeyFilters {
+  level?: number | null | undefined;
+  symmetrical?: boolean | null | undefined;
+  limit?: number | null | undefined;
+  offset?: number | null | undefined;
+  techniques?: string | undefined;
+  technique_bit?: string | undefined;
+}
+
 export const queryKeys = {
   sudojo: {
     /** Root key for all sudojo queries. Use for bulk invalidation. */
@@ -54,6 +67,9 @@ export const queryKeys = {
     /** Key for a specific technique query. @param technique - Technique number (>= 1) */
     technique: (technique: number) =>
       [...sudojoBase(), "techniques", technique] as const,
+    /** Key for a technique looked up by its URL path slug. */
+    techniqueByPath: (path: string) =>
+      [...sudojoBase(), "techniques", "path", path] as const,
 
     // Learning
     /** Key for the learning entries list, optionally filtered by technique and/or language. */
@@ -66,9 +82,18 @@ export const queryKeys = {
       [...sudojoBase(), "learning", uuid] as const,
 
     // Boards
-    /** Key for the boards list query, optionally filtered by level. */
-    boards: (filters?: { level?: number | undefined }) =>
+    /**
+     * Key for the boards list query, optionally filtered. Technique masks must
+     * be decimal strings here: React Query hashes keys with JSON.stringify,
+     * which throws on bigint, and numbers beyond 2^53 collide.
+     */
+    boards: (filters?: BoardsKeyFilters) =>
       [...sudojoBase(), "boards", filters] as const,
+    /** Key for board counts (total and without techniques). */
+    boardCounts: () => [...sudojoBase(), "boards", "counts"] as const,
+    /** Key for board counts per technique. */
+    boardCountsByTechnique: () =>
+      [...sudojoBase(), "boards", "counts", "by-technique"] as const,
     /** Key for the random board query, optionally filtered by level. */
     boardRandom: (filters?: { level?: number | undefined }) =>
       [...sudojoBase(), "boards", "random", filters] as const,
@@ -113,11 +138,28 @@ export const queryKeys = {
     /** Key for a random practice for a specific technique. */
     practiceRandom: (technique: number) =>
       [...sudojoBase(), "practices", "random", technique] as const,
+    /** Key for a specific practice by UUID. */
+    practice: (uuid: string) => [...sudojoBase(), "practices", uuid] as const,
+
+    // Examples
+    /** Key for the examples list, optionally filtered by technique. */
+    examples: (filters?: { technique?: number | null | undefined }) =>
+      [...sudojoBase(), "examples", filters] as const,
+    /** Key for example counts per technique. */
+    exampleCounts: () => [...sudojoBase(), "examples", "counts"] as const,
+    /** Key for a random example, optionally filtered by technique. */
+    exampleRandom: (filters?: { technique?: number | null | undefined }) =>
+      [...sudojoBase(), "examples", "random", filters] as const,
+    /** Key for a specific example by UUID. */
+    example: (uuid: string) => [...sudojoBase(), "examples", uuid] as const,
 
     // Communities
     /** Key for the communities list query, filtered by language. */
     communities: (filters?: { language?: string | undefined }) =>
       [...sudojoBase(), "communities", filters] as const,
+    /** Key for a specific community by UUID. */
+    community: (uuid: string) =>
+      [...sudojoBase(), "communities", uuid] as const,
 
     // Strategies
     /** Key for the strategies list query. */

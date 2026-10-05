@@ -11,9 +11,9 @@ This file provides context for AI assistants working on this codebase.
 
 `@sudobility/sudojo_client` is the TypeScript API client library for the Sudojo API (`sudojo_api`). It is the integration layer between Sudoku apps and the backend, providing:
 
-- **`SudojoClient` class**: 67 typed methods covering every `/api/v1/...` resource the apps use
-- **React Query hooks**: 58 `useSudojo*` hooks in 14 files, plus 3 `useSolver*` hooks
-- **Solver integration** (`/api/v1/solver/*` proxy), with `HintAccessDeniedError` for HTTP 402
+- **`SudojoClient` class**: 79 typed methods covering every `sudojo_api` route
+- **React Query hooks**: 78 `useSudojo*` hooks in 15 files, plus 6 `useSolver*` hooks. Every client method has a hook
+- **Solver integration** (`/api/v1/solver/*` proxy). `HintAccessDeniedError` (HTTP 402) is a deprecated dead path: the API never sends it
 - **Solution decryption** (AES-256-GCM) for `enc:`-prefixed `solution` fields
 - **Query key factories**, `STALE_TIMES`, and cache invalidation utilities
 
@@ -39,7 +39,7 @@ bun run build           # tsc -p tsconfig.build.json → dist/ (tests excluded) 
 bun run build:watch     # tsc --watch (uses tsconfig.json)
 bun run clean           # rm -rf dist
 bun run test            # vitest (watch mode locally; single run under CI)
-bun run test:run        # vitest run: 4 files, 139 tests                        [verified]
+bun run test:run        # vitest run: 7 files, 194 tests                        [verified]
 bun run test:watch      # vitest --watch
 bun run test:coverage   # vitest run --coverage → coverage/
 bun run typecheck       # tsc --noEmit                                          [verified]
@@ -78,18 +78,18 @@ src/
 │   ├── sudojo-client.ts           # SudojoClient (67 methods), createApiConfig ENDPOINTS,
 │   │                              #   createURLSearchParams, configureSolutionKey/decryption
 │   ├── index.ts
-│   └── __tests__/sudojo-client.test.ts
-├── hooks/                         # 58 React Query hooks
+│   └── __tests__/                 # sudojo-client, new-endpoints, ocr
+├── hooks/                         # 78 React Query hooks
 │   ├── query-keys.ts              # queryKeys.sudojo.*, createQueryKey, getServiceKeys, QueryKey
 │   ├── query-config.ts            # STALE_TIMES
 │   ├── use-sudojo-{health,levels,techniques,learning,boards,dailies,challenges,
-│   │   users,practices,communities,strategies,gamification,invalidation}.ts
+│   │   users,practices,examples,communities,strategies,gamification,ocr,invalidation}.ts
 │   ├── index.ts
-│   └── __tests__/query-keys.test.ts
+│   └── __tests__/                 # query-keys, hooks (renderHook render tests)
 └── solver/
     ├── index.ts                   # re-exports hooks + solver types (types NOT re-exported by src/index.ts)
     └── hooks/
-        ├── use-solver.ts          # useSolverSolve / useSolverValidate / useSolverGenerate
+        ├── use-solver.ts          # useSolver{Solve,Validate,Generate} + their *Mutation variants
         ├── query-keys.ts          # solverQueryKeys, getSolverServiceKeys
         ├── query-config.ts        # SOLVER_STALE_TIMES
         └── __tests__/
@@ -103,17 +103,37 @@ tsconfig.json / tsconfig.build.json / vitest.config.ts / eslint.config.js / .pre
 
 | Category | Exports |
 |---|---|
-| Client | `SudojoClient`, `createSudojoClient(networkClient, baseUrl)`, `configureSolutionKey(hex)`, `isValidUUID`, `validateUUID` (re-exported from sudojo_types) |
-| Types | `SolveOptions`, `ValidateOptions`, `GenerateOptions`, `QueryKey` |
+| Client | `SudojoClient`, `createSudojoClient(networkClient, baseUrl)` (both `@deprecated` here: use hooks), `configureSolutionKey(hex)`, `isValidUUID`, `validateUUID` (re-exported from sudojo_types) |
+| Types | `SolveOptions`, `ValidateOptions` (local: adds `brutalForce`), `GenerateOptions`, `DeletedData`, `DeleteUserRequest`, `QueryKey`, `BoardsKeyFilters`, `OcrExtractVariables`, `DeleteUserVariables`, `SolverSolveVariables` |
 | Errors | `HintAccessDeniedError` (+ static `isHintAccessDeniedError`) |
 | Query utils | `queryKeys`, `createQueryKey`, `getServiceKeys`, `STALE_TIMES`, `solverQueryKeys`, `getSolverServiceKeys`, `SOLVER_STALE_TIMES` |
-| Levels / Techniques / Learning | `useSudojoLevels`, `useSudojoLevel`, `useSudojo{Create,Update,Delete}Level`; same five-hook pattern for `Technique(s)`; `useSudojoLearning`, `useSudojoLearningItem`, `useSudojo{Create,Update,Delete}Learning` |
-| Boards / Dailies / Challenges | `useSudojoBoards`, `useSudojoBoard`, `useSudojoRandomBoard`, `useSudojo{Create,Update,Delete}Board`; `useSudojoDailies`, `useSudojoDaily`, `useSudojoTodayDaily`, `useSudojoDailyByDate`, `useSudojo{Create,Update,Delete}Daily`; `useSudojoChallenges`, `useSudojoChallenge`, `useSudojoRandomChallenge`, `useSudojo{Create,Update,Delete}Challenge` |
-| Users | `useSudojoUser`, `useSudojoUserSubscription` |
-| Practices | `useSudojoPracticeCounts`, `useSudojoRandomPractice`, `useSudojoCreatePractice`, `useSudojoDeleteAllPractices`, `useSudojoRegeneratePracticeHints` |
-| Communities / Strategies | `useSudojoCommunities`, `useSudojo{Create,Update,Delete}Community`; `useSudojoStrategies`, `useSudojoStrategyByStub`, `useSudojo{Create,Update,Delete}Strategy` |
-| Gamification | `useSudojoGamificationStats`, `useSudojoBadgeDefinitions`, `useSudojoPointHistory`, `useSudojoPlayStart`, `useSudojoPlayFinish` |
-| Other | `useSudojoHealth`, `useSudojoInvalidation`, `useSudojoOcrExtract`, `useSolverSolve`, `useSolverValidate`, `useSolverGenerate` |
+| Levels / Techniques / Learning | `useSudojoLevels`, `useSudojoLevel`, `useSudojo{Create,Update,Delete}Level`; same five-hook pattern for `Technique(s)` plus `useSudojoTechniqueByPath`; `useSudojoLearning`, `useSudojoLearningItem`, `useSudojo{Create,Update,Delete}Learning` |
+| Boards / Dailies / Challenges | `useSudojoBoards`, `useSudojoBoard`, `useSudojoRandomBoard`, `useSudojoFetchBoards` (imperative), `useSudojo{Create,Update,Delete}Board`, `useSudojoBoardCounts`, `useSudojoBoardCountsByTechnique`, `useSudojoUpdatePuzzleStats`; `useSudojoDailies`, `useSudojoDaily`, `useSudojoTodayDaily`, `useSudojoDailyByDate`, `useSudojo{Create,Update,Delete}Daily`; `useSudojoChallenges`, `useSudojoChallenge`, `useSudojoRandomChallenge`, `useSudojo{Create,Update,Delete}Challenge` |
+| Examples | `useSudojoExamples`, `useSudojoExampleCounts`, `useSudojoRandomExample`, `useSudojoExample`, `useSudojo{Create,Update,Delete}Example` |
+| Users | `useSudojoUser`, `useSudojoUserSubscription`, `useSudojoDeleteUser` |
+| Practices | `useSudojoPracticeCounts`, `useSudojoRandomPractice`, `useSudojoPractice`, `useSudojoCreatePractice`, `useSudojoDeletePractice`, `useSudojoDeleteAllPractices`, `useSudojoRegeneratePracticeHints` |
+| Communities / Strategies | `useSudojoCommunities`, `useSudojoCommunity`, `useSudojo{Create,Update,Delete}Community`; `useSudojoStrategies`, `useSudojoStrategy`, `useSudojoStrategyByStub`, `useSudojo{Create,Update,Delete}Strategy` |
+| Gamification | `useSudojoGamificationStats`, `useSudojoBadgeDefinitions`, `useSudojoPointHistory`, `useSudojoPlayStart`, `useSudojoPlayFinish`, `useSudojo{Create,Update,Delete}Badge` |
+| Other | `useSudojoHealth`, `useSudojoInvalidation`, `useSudojoOcrExtract`, `useSolverSolve`, `useSolverValidate`, `useSolverGenerate`, and imperative `useSolverSolveMutation`, `useSolverValidateMutation`, `useSolverGenerateMutation` |
+
+**Hooks-only rule (owner):** all network logic lives here and is exposed as hooks. sudojo_lib and
+the apps call hooks and never construct `SudojoClient`. The root-entry `SudojoClient` /
+`createSudojoClient` are deprecated aliases kept until a breaking release. The `./network` entry
+is not deprecated, because non-React consumers (sudojo_bot) need it. `tsconfig.build.json` overrides
+`removeComments: false` so JSDoc (including `@deprecated`) reaches `dist/*.d.ts`.
+
+Imperative reads for batch jobs (mutations, nothing cached): `useSolverValidateMutation`
+(`{token?, options: ValidateOptions}`), `useSolverGenerateMutation` (`{token?, options?}` or no
+argument), `useSudojoFetchBoards` (`{token, queryParams?: BoardQueryParams}`).
+
+`useSolverSolveMutation(networkClient, baseUrl)` returns
+`UseMutationResult<BaseResponse<SolveData>, Error, SolverSolveVariables>`, where the variables are
+`{ token?: string; options: SolveOptions }`. It calls `solverSolve(token ?? "", options)`, so a
+filtered call and an unfiltered fallback are two `mutateAsync` calls.
+
+`useSudojoDeleteUser` replaces `@sudobility/auth_lib`'s `deleteAccount`, which only sends the same
+`DELETE /api/v1/users/:userId`. The API deletes the Firebase user server-side. Callers still sign
+out locally afterwards.
 
 The `exports` map has two entries: `.` (`dist/index.js` - hooks included, so React and
 `@tanstack/react-query` must be present) and `./network` (`dist/network/index.js` - `SudojoClient`
@@ -155,7 +175,7 @@ export const useSudojoThing = (
 };
 ```
 
-Token-gated query hooks: `useSudojoUser`, `useSudojoUserSubscription`, `useSudojoGamificationStats`, `useSudojoPointHistory`, `useSolverSolve`, `useSolverGenerate`. All other query hooks run without a token.
+Token-gated query hooks: `useSudojoUser`, `useSudojoUserSubscription`, `useSudojoGamificationStats`, `useSudojoPointHistory`. All other query hooks run without a token, including `useSolverSolve` (optional auth) and `useSolverGenerate` (public).
 
 ### Mutation Hook Pattern
 
@@ -206,6 +226,7 @@ To invalidate a whole resource, use the prefix `[...queryKeys.sudojo.all(), "boa
 - `token` (Firebase ID token) is a parameter of every call and is not stored in the client. It is sent as `Authorization: Bearer <token>` only when truthy.
 - `baseUrl` is the API **origin** (e.g. `https://api.sudojo.com`). Endpoints already include `/api/v1`, and health is `GET /`, so a trailing slash or `/api/v1` suffix breaks URLs.
 - Only `networkClient.request()` is used. Consumers inject any `NetworkClient` implementation from `@sudobility/types`.
+- Hosts without a `NetworkClient` of their own (sudojo_app_rn) use `createAuthenticatedFetchClient({ getToken, refreshToken?, onForbidden?, fetch? })` (`src/network/fetch-network-client.ts`): Bearer token from `getToken()` at request time, force-refresh and retry once on 401, `onForbidden` (sign out) on 403; non-2xx resolves with `ok: false` instead of throwing.
 - Hooks build a fresh `SudojoClient` per `(networkClient, baseUrl)` via `useMemo`. Pass stable references.
 
 ### Solution Decryption
@@ -219,7 +240,8 @@ Every response is walked recursively, and any `solution` string starting with `e
 ### Solver
 
 - `solverSolve` / `solverValidate` use 120 s timeouts; `regeneratePracticeHints` uses 600 s.
-- `solverSolve` builds its own request. It throws `HintAccessDeniedError` on 402 + `error.code === "HINT_ACCESS_DENIED"`, and a generic `Error` on any other `!ok`.
+- `solverSolve` builds its own request. It throws `HintAccessDeniedError` on 402 + `error.code === "HINT_ACCESS_DENIED"` (marked `@deprecated`: `sudojo_api` never sends it, because hints are unrestricted server-side), and a generic `Error` on any other `!ok`.
+- `solverValidate` passes `brutalForce` through when set. `ValidateOptions` is a local extension of the sudojo_types type (`TODO(sudojo_types)`).
 - Solver query params are sorted alphabetically, and commas are left unencoded (`createURLSearchParams`). The code comment still says the backend is Kotlin. It is now `sudojo_api` (Hono) proxying to `sudojo_solver`.
 - `SolveOptions.techniques` is a comma-separated list of technique IDs (`"1,2,60"`), **not** a bitmask. It needs no BigInt handling.
 
@@ -229,7 +251,7 @@ Bit N = technique id N (ids 1–60). Any mask with an id ≥ 54 exceeds 2^53, so
 
 - **Responses:** `sudojo_api` sends an exact string next to each numeric field: `techniques_bitmask` on boards, dailies, and solver validate/generate, and `techniques_bitfield_bitmask` on examples. The client returns response bodies untouched (the `decryptSolutionFields` walk copies strings as-is). To make decisions, read `techniqueBitmaskOf(obj)` (a `bigint`, from sudojo_types), never the numeric `techniques`. No code in `src/` reads a mask today.
 - **Requests:** `BoardQueryParams.techniques` / `technique_bit`, the board/daily bodies' `techniques`, and the example body's `techniques_bitfield` accept `number | string`. Send `formatTechniqueBitmask(mask)`. `getBoards` formats with `bitmaskQueryValue`: strings and bigints pass through exactly, and integer numbers go through `BigInt(n)`. Never use `String(n)` for a mask, because it rounds anything above 2^53 to a *different* decimal: `String(2 ** 60)` is `"1152921504606847000"` (2^60 + 24), which the API reads as techniques 60, 4 and 3. JSON bodies don't have this problem, because the API `JSON.parse`s a number back to the same double. `request()` serializes a stray `bigint` in a body as its decimal string (the `bigintAsString` replacer) instead of throwing. `sudojo_api` returns 400 for invalid values.
-- **Query keys:** React Query hashes keys with `JSON.stringify`, which throws on `bigint`, and numbers beyond 2^53 collide. If a key ever carries a mask, put it in as a string. No key does today, because `useSudojoBoards` forwards only `level`.
+- **Query keys:** React Query hashes keys with `JSON.stringify`, which throws on `bigint`, and numbers beyond 2^53 collide. Keys carry masks as strings. `useSudojoBoards` converts `techniques` / `technique_bit` with `bitmaskQueryValue` before putting them in `boards(...)`.
 - Tests: "technique bitmasks beyond 2^53" in `src/network/__tests__/sudojo-client.test.ts`, and "query key serializability" in `src/hooks/__tests__/query-keys.test.ts`.
 
 **Pending sudojo_types release.** The `*_bitmask` response fields, the `number | string` request types, and the BigInt helpers (`parseTechniqueBitmask`, `techniqueBitmaskOf`, `hasTechniqueInBitmask`, `techniqueIdsFromBitmask`, `techniqueIdsToBitmask`, `formatTechniqueBitmask`) exist only in the local, unpublished `../sudojo_types/src/index.ts`. The installed 1.2.61 types say `techniques: number`. `src/` doesn't import the new helpers, so `typecheck` and `test:run` pass against either version. To check against the local source without touching `package.json` or `bun.lock`, use a throwaway config and delete it afterwards: a tsconfig that extends `tsconfig.json` with `"rootDir": ".."` and `paths: {"@sudobility/sudojo_types": ["../sudojo_types/src/index.ts"]}`, and a vitest config that `mergeConfig`s `vitest.config.ts` with the same `resolve.alias`. Once sudojo_types is published, bump its ranges here and remove this note.
@@ -253,7 +275,9 @@ Other peers: `@tanstack/react-query >=5.0.0`, `react >=18.0.0`. `@sudobility/di`
 | `ENDPOINTS` paths, HTTP methods, query param names | `sudojo_api/src/routes/*.ts` (mounted at `/api/v1` in `src/routes/index.ts`) |
 | Request/response types (`Board`, `SolveOptions`, `HintAccessDeniedResponse`, …) | `sudojo_types/src/index.ts`. Bump the sudojo_types range here when using new types |
 | `enc:` solution format (AES-256-GCM, 12-byte nonce, base64) | `sudojo_api/src/lib/solution-crypto.ts` (`SOLUTION_ENCRYPTION_KEY`); apps pass the same hex key (e.g. sudojo_app `VITE_SOLUTION_KEY`) |
-| 402 `HINT_ACCESS_DENIED` body | sudojo_types `HintAccessDeniedResponse`. Current `sudojo_api` has no code path that emits this code; its only 402 is the daily-limit body from `middleware/accessControl.ts`, which surfaces here as a generic `Error` |
+| 402 `HINT_ACCESS_DENIED` body | sudojo_types `HintAccessDeniedResponse`. Current `sudojo_api` never sends a 402 (hint limits and the daily-limit gate were removed). The handling is kept but marked `@deprecated` |
+| Level range | `isValidLevel` / `MIN_LEVEL` / `MAX_LEVEL` from sudojo_types (used by `getLevel`/`updateLevel`/`deleteLevel` and `useSudojoLevel`) |
+| Local types pending sudojo_types | `ValidateOptions.brutalForce`, `DeletedData` (`{ deleted }`), `DeleteUserRequest` (provider tokens). Marked `TODO(sudojo_types)` in `sudojo-client.ts` |
 | Solver `filters` param | Still sent, but `sudojo_api` `/solver/solve` ignores it (sudojo_types marks it legacy) |
 | Technique bitmasks as decimal strings (`techniques_bitmask`, `techniques_bitfield_bitmask`; string or number accepted on input) | sudojo_api (parses and returns 400 on bad input), and sudojo_types BigInt helpers. See [Technique Bitmasks](#technique-bitmasks-decimal-strings-never-js-numbers) |
 
@@ -278,15 +302,16 @@ Document only. Never run these without an explicit request (see git policy).
 
 ## Gotchas
 
+- **Hook tests** (`src/hooks/__tests__/hooks.test.ts`) use `renderHook` from `@testing-library/react` with a `QueryClientProvider` built via `createElement` (the file is `.ts`) and `MockNetworkClient`.
 - **Tests are not typechecked or linted.** `tsconfig.json` excludes `**/*.test.ts`, and `eslint.config.js` ignores test files.
-- **No coverage threshold.** `test:coverage` only reports (~25% lines; no hook render tests). The old 70% threshold was mis-nested under `global` and never enforced, so it was removed (owner decision, 2026-09-10) rather than left looking like a gate.
+- **No coverage threshold.** `test:coverage` only reports. The old 70% threshold was mis-nested under `global` and never enforced, so it was removed (owner decision, 2026-09-10) rather than left looking like a gate.
 - **The `format` / `format:check` glob is shallow.** `src/**/*.ts` is expanded by `sh` without globstar, so it only matches `src/*/*.ts` and skips `src/index.ts`, `src/solver/hooks/*`, and all tests. Lint still enforces Prettier on non-test `src`.
 - **`dist/` is bundler-only.** Imports are extensionless (`from "./network"`), so plain Node ESM can't load it (`ERR_UNSUPPORTED_DIR_IMPORT`). Vite, Metro, and Vitest are fine.
-- **Hooks drop some query params.** `useSudojoBoards` forwards only `level` (not `limit/offset/techniques/technique_bit`), and `useSudojoRandomBoard` drops `symmetrical`. Use `SudojoClient` directly for those.
+- **`useSudojoRandomBoard` drops `symmetrical`.** `useSudojoBoards` forwards every `BoardQueryParams` field.
 - **`useSudojoUserSubscription`'s key omits `testMode`.** Test and live results share one cache entry.
 - `src/solver/index.ts` re-exports solver types (`SolveData`, `SolverHints`, …), but `src/index.ts` does not. Import those from `@sudobility/sudojo_types`.
 - `request()` ignores `response.ok`. Non-2xx bodies resolve as data unless the `NetworkClient` throws.
-- `useSudojoInvalidation` has no helpers for communities or strategies.
+- `useSudojoInvalidation` has no helpers for communities, strategies or examples.
 - `vitest.config.ts` defines an `@` → `src` alias that tsc doesn't know about. Don't use it in `src/`.
 
 ## Common Tasks

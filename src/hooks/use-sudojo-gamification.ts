@@ -15,6 +15,8 @@ import {
 import type { NetworkClient } from "@sudobility/types";
 import type {
   BadgeDefinition,
+  BadgeDefinitionCreateRequest,
+  BadgeDefinitionUpdateRequest,
   BaseResponse,
   GameFinishRequest,
   GameFinishResponse,
@@ -25,7 +27,7 @@ import type {
 } from "@sudobility/sudojo_types";
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
-import { SudojoClient } from "../network/sudojo-client";
+import { type DeletedData, SudojoClient } from "../network/sudojo-client";
 
 // =============================================================================
 // Game Session Hooks
@@ -267,5 +269,132 @@ export const useSudojoPointHistory = (
     staleTime: 0, // Always fresh
     ...options,
     enabled: isEnabled,
+  });
+};
+
+// =============================================================================
+// Badge Management (admin)
+// =============================================================================
+
+/**
+ * Hook to create a badge definition. **Admin only.**
+ *
+ * On success, invalidates the badge definitions query.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, data })` to execute.
+ */
+export const useSudojoCreateBadge = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+): UseMutationResult<
+  BaseResponse<BadgeDefinition>,
+  Error,
+  { token: string; data: BadgeDefinitionCreateRequest }
+> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      token,
+      data,
+    }: {
+      token: string;
+      data: BadgeDefinitionCreateRequest;
+    }) => client.createBadge(token, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.sudojo.gamificationBadges(),
+      });
+    },
+  });
+};
+
+/**
+ * Hook to update a badge definition by key. **Admin only.**
+ *
+ * On success, invalidates the badge definitions query.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, badgeKey, data })`.
+ */
+export const useSudojoUpdateBadge = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+): UseMutationResult<
+  BaseResponse<BadgeDefinition>,
+  Error,
+  { token: string; badgeKey: string; data: BadgeDefinitionUpdateRequest }
+> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      token,
+      badgeKey,
+      data,
+    }: {
+      token: string;
+      badgeKey: string;
+      data: BadgeDefinitionUpdateRequest;
+    }) => client.updateBadge(token, badgeKey, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.sudojo.gamificationBadges(),
+      });
+    },
+  });
+};
+
+/**
+ * Hook to delete a badge definition by key. **Admin only.**
+ *
+ * The API also deletes every user's award of the badge, so on success this
+ * invalidates the badge definitions and the user's gamification stats.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, badgeKey })`.
+ */
+export const useSudojoDeleteBadge = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+): UseMutationResult<
+  BaseResponse<DeletedData>,
+  Error,
+  { token: string; badgeKey: string }
+> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      token,
+      badgeKey,
+    }: {
+      token: string;
+      badgeKey: string;
+    }) => client.deleteBadge(token, badgeKey),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.sudojo.gamificationBadges(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.sudojo.gamificationStats(),
+      });
+    },
   });
 };

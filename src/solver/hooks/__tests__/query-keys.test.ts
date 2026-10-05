@@ -71,6 +71,23 @@ describe("solverQueryKeys", () => {
   });
 
   describe("validate", () => {
+    it("appends brutalForce only when set", () => {
+      const puzzle = "0".repeat(81);
+      expect(solverQueryKeys.validate(puzzle, undefined)).toEqual([
+        "sudojo",
+        "solver",
+        "validate",
+        puzzle,
+      ]);
+      expect(solverQueryKeys.validate(puzzle, false)).toEqual([
+        "sudojo",
+        "solver",
+        "validate",
+        puzzle,
+        { brutalForce: false },
+      ]);
+    });
+
     it("should return validate key with puzzle string", () => {
       const puzzle = "0".repeat(81);
       const key = solverQueryKeys.validate(puzzle);

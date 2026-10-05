@@ -213,3 +213,47 @@ export const useSudojoDeleteStrategy = (
     },
   });
 };
+
+/**
+ * Hook to fetch a single strategy by numeric ID.
+ *
+ * Public endpoint. Disabled when `strategy` < 1.
+ * Stale time: {@link STALE_TIMES.STRATEGIES}.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param strategy - Strategy ID (>= 1). Query is disabled if < 1.
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing a single Strategy object
+ */
+export const useSudojoStrategy = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+  token: string,
+  strategy: number,
+  options?: Omit<
+    UseQueryOptions<BaseResponse<Strategy>>,
+    "queryKey" | "queryFn"
+  >,
+): UseQueryResult<BaseResponse<Strategy>> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+
+  const queryFn = useCallback(async (): Promise<BaseResponse<Strategy>> => {
+    return client.getStrategy(token, strategy);
+  }, [client, token, strategy]);
+
+  const isEnabled =
+    strategy >= 1 && (options?.enabled !== undefined ? options.enabled : true);
+
+  return useQuery({
+    queryKey: queryKeys.sudojo.strategy(strategy),
+    queryFn,
+    staleTime: STALE_TIMES.STRATEGIES,
+    ...options,
+    enabled: isEnabled,
+  });
+};

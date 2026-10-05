@@ -90,9 +90,9 @@ describe("SudojoClient", () => {
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
       expect(result.data?.[0]?.title).toBe("Beginner");
-      expect(
-        mockNetworkClient.wasUrlCalled(`${BASE_URL}/api/v1/levels`),
-      ).toBe(true);
+      expect(mockNetworkClient.wasUrlCalled(`${BASE_URL}/api/v1/levels`)).toBe(
+        true,
+      );
     });
 
     it("should get a specific level by number", async () => {
@@ -735,9 +735,9 @@ describe("SudojoClient", () => {
     });
 
     it("should throw for empty userId on getUserSubscription", async () => {
-      await expect(
-        client.getUserSubscription(TEST_TOKEN, ""),
-      ).rejects.toThrow('Invalid userId: ""');
+      await expect(client.getUserSubscription(TEST_TOKEN, "")).rejects.toThrow(
+        'Invalid userId: ""',
+      );
     });
 
     it("should throw for invalid practice technique number", async () => {

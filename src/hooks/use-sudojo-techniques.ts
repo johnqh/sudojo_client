@@ -249,3 +249,47 @@ export const useSudojoDeleteTechnique = (
     },
   });
 };
+
+/**
+ * Hook to fetch a technique by its URL path slug (e.g. "naked-single").
+ *
+ * Public endpoint. Disabled when `path` is empty.
+ * Stale time: {@link STALE_TIMES.TECHNIQUES}.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param path - Technique path slug. Query is disabled if empty.
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing a single Technique object
+ */
+export const useSudojoTechniqueByPath = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+  token: string,
+  path: string,
+  options?: Omit<
+    UseQueryOptions<BaseResponse<Technique>>,
+    "queryKey" | "queryFn"
+  >,
+): UseQueryResult<BaseResponse<Technique>> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+
+  const queryFn = useCallback(async (): Promise<BaseResponse<Technique>> => {
+    return client.getTechniqueByPath(token, path);
+  }, [client, token, path]);
+
+  const isEnabled =
+    !!path && (options?.enabled !== undefined ? options.enabled : true);
+
+  return useQuery({
+    queryKey: queryKeys.sudojo.techniqueByPath(path),
+    queryFn,
+    staleTime: STALE_TIMES.TECHNIQUES,
+    ...options,
+    enabled: isEnabled,
+  });
+};

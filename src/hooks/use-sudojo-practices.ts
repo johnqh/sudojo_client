@@ -20,6 +20,7 @@ import type {
   TechniquePracticeCreateRequest,
 } from "@sudobility/sudojo_types";
 import { queryKeys } from "./query-keys";
+import { STALE_TIMES } from "./query-config";
 import { SudojoClient } from "../network/sudojo-client";
 
 /**
@@ -205,6 +206,91 @@ export const useSudojoRegeneratePracticeHints = (
   return useMutation({
     mutationFn: async ({ token }: { token: string }) => {
       return client.regeneratePracticeHints(token);
+    },
+  });
+};
+
+/**
+ * Hook to fetch a single practice by UUID.
+ *
+ * Public endpoint. Disabled when `uuid` is empty.
+ * Stale time: {@link STALE_TIMES.PRACTICE} (5 minutes).
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param uuid - Practice UUID. Query is disabled if empty.
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing a single TechniquePractice
+ */
+export const useSudojoPractice = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+  token: string,
+  uuid: string,
+  options?: Omit<
+    UseQueryOptions<BaseResponse<TechniquePractice>>,
+    "queryKey" | "queryFn"
+  >,
+): UseQueryResult<BaseResponse<TechniquePractice>> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+
+  const queryFn = useCallback(async (): Promise<
+    BaseResponse<TechniquePractice>
+  > => {
+    return client.getPractice(token, uuid);
+  }, [client, token, uuid]);
+
+  const isEnabled =
+    !!uuid && (options?.enabled !== undefined ? options.enabled : true);
+
+  return useQuery({
+    queryKey: queryKeys.sudojo.practice(uuid),
+    queryFn,
+    staleTime: STALE_TIMES.PRACTICE,
+    ...options,
+    enabled: isEnabled,
+  });
+};
+
+/**
+ * Hook to delete a single practice. **Admin only.**
+ *
+ * On success, removes the practice from the cache and invalidates the
+ * practice counts query.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token, uuid })` to execute.
+ */
+export const useSudojoDeletePractice = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+): UseMutationResult<
+  BaseResponse<TechniquePractice>,
+  Error,
+  { token: string; uuid: string }
+> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ token, uuid }: { token: string; uuid: string }) => {
+      return client.deletePractice(token, uuid);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.removeQueries({
+        queryKey: queryKeys.sudojo.practice(variables.uuid),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.sudojo.practiceCounts(),
+      });
     },
   });
 };

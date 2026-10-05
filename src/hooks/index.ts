@@ -7,7 +7,7 @@
 // ============================================================================
 
 export { createQueryKey, getServiceKeys, queryKeys } from "./query-keys";
-export type { QueryKey } from "./query-keys";
+export type { BoardsKeyFilters, QueryKey } from "./query-keys";
 export { STALE_TIMES } from "./query-config";
 
 // ============================================================================
@@ -43,6 +43,7 @@ export {
   useSudojoCreateTechnique,
   useSudojoDeleteTechnique,
   useSudojoTechnique,
+  useSudojoTechniqueByPath,
   useSudojoTechniques,
   useSudojoUpdateTechnique,
 } from "./use-sudojo-techniques";
@@ -65,12 +66,31 @@ export {
 
 export {
   useSudojoBoard,
+  useSudojoBoardCounts,
+  useSudojoBoardCountsByTechnique,
   useSudojoBoards,
   useSudojoCreateBoard,
   useSudojoDeleteBoard,
+  useSudojoFetchBoards,
   useSudojoRandomBoard,
   useSudojoUpdateBoard,
+  useSudojoUpdatePuzzleStats,
 } from "./use-sudojo-boards";
+export type { FetchBoardsVariables } from "./use-sudojo-boards";
+
+// ============================================================================
+// Example hooks
+// ============================================================================
+
+export {
+  useSudojoCreateExample,
+  useSudojoDeleteExample,
+  useSudojoExample,
+  useSudojoExampleCounts,
+  useSudojoExamples,
+  useSudojoRandomExample,
+  useSudojoUpdateExample,
+} from "./use-sudojo-examples";
 
 // ============================================================================
 // Daily hooks
@@ -103,7 +123,12 @@ export {
 // User hooks
 // ============================================================================
 
-export { useSudojoUser, useSudojoUserSubscription } from "./use-sudojo-users";
+export {
+  useSudojoDeleteUser,
+  useSudojoUser,
+  useSudojoUserSubscription,
+} from "./use-sudojo-users";
+export type { DeleteUserVariables } from "./use-sudojo-users";
 
 // ============================================================================
 // Practice hooks
@@ -112,6 +137,8 @@ export { useSudojoUser, useSudojoUserSubscription } from "./use-sudojo-users";
 export {
   useSudojoCreatePractice,
   useSudojoDeleteAllPractices,
+  useSudojoDeletePractice,
+  useSudojoPractice,
   useSudojoRegeneratePracticeHints,
   useSudojoPracticeCounts,
   useSudojoRandomPractice,
@@ -123,7 +150,10 @@ export {
 
 export {
   useSudojoBadgeDefinitions,
+  useSudojoCreateBadge,
+  useSudojoDeleteBadge,
   useSudojoGamificationStats,
+  useSudojoUpdateBadge,
   useSudojoPlayFinish,
   useSudojoPlayStart,
   useSudojoPointHistory,
@@ -135,6 +165,7 @@ export {
 
 export {
   useSudojoCommunities,
+  useSudojoCommunity,
   useSudojoCreateCommunity,
   useSudojoDeleteCommunity,
   useSudojoUpdateCommunity,
@@ -146,6 +177,7 @@ export {
 
 export {
   useSudojoStrategies,
+  useSudojoStrategy,
   useSudojoStrategyByStub,
   useSudojoCreateStrategy,
   useSudojoDeleteStrategy,

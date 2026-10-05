@@ -15,16 +15,30 @@ import type { NetworkClient } from "@sudobility/types";
 import type {
   BaseResponse,
   Board,
+  BoardCountsByTechniqueData,
+  BoardCountsData,
   BoardCreateRequest,
   BoardQueryParams,
   BoardUpdateRequest,
+  UpdateStatsData,
 } from "@sudobility/sudojo_types";
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
-import { SudojoClient } from "../network/sudojo-client";
+import { bitmaskQueryValue, SudojoClient } from "../network/sudojo-client";
+
+/** A technique mask as the exact decimal string sent on the wire. */
+const maskKey = (
+  value: number | string | null | undefined,
+): string | undefined =>
+  value === undefined || value === null ? undefined : bitmaskQueryValue(value);
 
 /**
- * Hook to fetch all Sudoku boards with optional filtering by level.
+ * Hook to fetch Sudoku boards, optionally filtered and paginated.
+ *
+ * Every {@link BoardQueryParams} field (`level`, `limit`, `offset`,
+ * `techniques`, `technique_bit`, `symmetrical`) is forwarded to `getBoards`
+ * and is part of the query key. Technique masks go into the key as exact
+ * decimal strings, so pass masks above 2^53 as strings.
  *
  * Boards represent Sudoku puzzles with their original clues, solution, and
  * metadata. This is a public endpoint - token is accepted for consistency
@@ -35,7 +49,7 @@ import { SudojoClient } from "../network/sudojo-client";
  * @param networkClient - Network client for making HTTP requests
  * @param baseUrl - Base URL of the Sudojo API
  * @param token - Firebase access token (optional for this public endpoint)
- * @param queryParams - Optional filter parameters (e.g., `{ level: 3 }`)
+ * @param queryParams - Optional filters (e.g., `{ level: 3, limit: 20, ... }`)
  * @param options - Additional TanStack Query options
  * @returns A UseQueryResult containing an array of Board objects
  */
@@ -54,32 +68,62 @@ export const useSudojoBoards = (
     [networkClient, baseUrl],
   );
 
-  // Extract values for stable dependencies
+  // Extract values for stable dependencies. Masks are normalised to their
+  // exact decimal string, which getBoards sends unchanged.
   const level = queryParams?.level;
+  const symmetrical = queryParams?.symmetrical;
+  const limit = queryParams?.limit;
+  const offset = queryParams?.offset;
+  const techniques = maskKey(queryParams?.techniques);
+  const techniqueBit = maskKey(queryParams?.technique_bit);
+  const hasFilters =
+    queryParams !== undefined &&
+    [level, symmetrical, limit, offset, techniques, techniqueBit].some(
+      (v) => v !== undefined && v !== null,
+    );
 
   const queryFn = useCallback(async (): Promise<BaseResponse<Board[]>> => {
     return client.getBoards(
       token,
-      level !== undefined
+      hasFilters
         ? {
             level,
-            symmetrical: undefined,
-            limit: undefined,
-            offset: undefined,
-            techniques: undefined,
-            technique_bit: undefined,
+            symmetrical,
+            limit,
+            offset,
+            techniques,
+            technique_bit: techniqueBit,
           }
         : undefined,
     );
-  }, [client, token, level]);
+  }, [
+    client,
+    token,
+    hasFilters,
+    level,
+    symmetrical,
+    limit,
+    offset,
+    techniques,
+    techniqueBit,
+  ]);
 
   // Public endpoint - no token required
   const isEnabled = options?.enabled !== undefined ? options.enabled : true;
 
   return useQuery({
-    queryKey: queryKeys.sudojo.boards({
-      level: level ?? undefined,
-    }),
+    queryKey: queryKeys.sudojo.boards(
+      hasFilters
+        ? {
+            level: level ?? undefined,
+            symmetrical: symmetrical ?? undefined,
+            limit: limit ?? undefined,
+            offset: offset ?? undefined,
+            techniques,
+            technique_bit: techniqueBit,
+          }
+        : { level: undefined },
+    ),
     queryFn,
     staleTime: STALE_TIMES.BOARDS,
     ...options,
@@ -321,5 +365,163 @@ export const useSudojoDeleteBoard = (
         queryKey: queryKeys.sudojo.board(variables.uuid),
       });
     },
+  });
+};
+
+/**
+ * Hook to fetch board counts (total, and boards without techniques).
+ *
+ * Public endpoint. Uses `staleTime: 0` to always fetch fresh counts.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing BoardCountsData
+ */
+export const useSudojoBoardCounts = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+  token: string,
+  options?: Omit<
+    UseQueryOptions<BaseResponse<BoardCountsData>>,
+    "queryKey" | "queryFn"
+  >,
+): UseQueryResult<BaseResponse<BoardCountsData>> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+
+  const queryFn = useCallback(async (): Promise<
+    BaseResponse<BoardCountsData>
+  > => {
+    return client.getBoardCounts(token);
+  }, [client, token]);
+
+  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
+
+  return useQuery({
+    queryKey: queryKeys.sudojo.boardCounts(),
+    queryFn,
+    staleTime: 0, // Always fetch fresh for counts
+    ...options,
+    enabled: isEnabled,
+  });
+};
+
+/**
+ * Hook to fetch the number of boards that use each technique.
+ *
+ * Public endpoint. Uses `staleTime: 0` to always fetch fresh counts.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @param token - Firebase access token (optional for this public endpoint)
+ * @param options - Additional TanStack Query options
+ * @returns A UseQueryResult containing a technique ID -> count map
+ */
+export const useSudojoBoardCountsByTechnique = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+  token: string,
+  options?: Omit<
+    UseQueryOptions<BaseResponse<BoardCountsByTechniqueData>>,
+    "queryKey" | "queryFn"
+  >,
+): UseQueryResult<BaseResponse<BoardCountsByTechniqueData>> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+
+  const queryFn = useCallback(async (): Promise<
+    BaseResponse<BoardCountsByTechniqueData>
+  > => {
+    return client.getBoardCountsByTechnique(token);
+  }, [client, token]);
+
+  const isEnabled = options?.enabled !== undefined ? options.enabled : true;
+
+  return useQuery({
+    queryKey: queryKeys.sudojo.boardCountsByTechnique(),
+    queryFn,
+    staleTime: 0, // Always fetch fresh for counts
+    ...options,
+    enabled: isEnabled,
+  });
+};
+
+/**
+ * Hook to recalculate puzzle stats (the `percentage` of boards per level and
+ * per technique). Requires admin authentication.
+ *
+ * The API writes the new percentages onto the level and technique rows, so on
+ * success this invalidates all level and technique queries. Board rows are not
+ * changed.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutate({ token })` to execute.
+ */
+export const useSudojoUpdatePuzzleStats = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+): UseMutationResult<
+  BaseResponse<UpdateStatsData>,
+  Error,
+  { token: string }
+> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ token }: { token: string }) => {
+      return client.updatePuzzleStats(token);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.sudojo.all(), "levels"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.sudojo.all(), "techniques"],
+      });
+    },
+  });
+};
+
+/** Arguments for one {@link useSudojoFetchBoards} call. */
+export interface FetchBoardsVariables {
+  /** Firebase access token ("" is fine: the endpoint is public). */
+  token: string;
+  /** Every field is forwarded to `getBoards` (masks sent losslessly). */
+  queryParams?: BoardQueryParams | undefined;
+}
+
+/**
+ * Imperative board fetch, e.g. for admin batch jobs that page through boards
+ * with per-call filters. Calls `SudojoClient.getBoards(token, queryParams)`
+ * with every filter. It is a mutation so nothing is cached or invalidated;
+ * use {@link useSudojoBoards} for cached, declarative reads.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutateAsync({ token, queryParams })`.
+ */
+export const useSudojoFetchBoards = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+): UseMutationResult<BaseResponse<Board[]>, Error, FetchBoardsVariables> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+
+  return useMutation({
+    mutationFn: async ({ token, queryParams }: FetchBoardsVariables) =>
+      client.getBoards(token, queryParams),
   });
 };

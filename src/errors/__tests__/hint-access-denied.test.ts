@@ -83,9 +83,7 @@ describe("HintAccessDeniedError", () => {
 
     it("should return false for strings", () => {
       expect(
-        HintAccessDeniedError.isHintAccessDeniedError(
-          "HINT_ACCESS_DENIED",
-        ),
+        HintAccessDeniedError.isHintAccessDeniedError("HINT_ACCESS_DENIED"),
       ).toBe(false);
     });
 

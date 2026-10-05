@@ -12,11 +12,12 @@ import {
   UseQueryResult,
 } from "@tanstack/react-query";
 import type { NetworkClient } from "@sudobility/types";
-import type {
-  BaseResponse,
-  Level,
-  LevelCreateRequest,
-  LevelUpdateRequest,
+import {
+  type BaseResponse,
+  isValidLevel,
+  type Level,
+  type LevelCreateRequest,
+  type LevelUpdateRequest,
 } from "@sudobility/sudojo_types";
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
@@ -105,8 +106,7 @@ export const useSudojoLevel = (
 
   // Public endpoint - no token required, but level is required
   const isEnabled =
-    level >= 1 &&
-    level <= 12 &&
+    isValidLevel(level) &&
     (options?.enabled !== undefined ? options.enabled : true);
 
   return useQuery({

@@ -4,7 +4,10 @@
 
 import { useCallback, useMemo } from "react";
 import {
+  useMutation,
+  UseMutationResult,
   useQuery,
+  useQueryClient,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
@@ -15,7 +18,11 @@ import type {
 } from "@sudobility/sudojo_types";
 import { queryKeys } from "./query-keys";
 import { STALE_TIMES } from "./query-config";
-import { SudojoClient } from "../network/sudojo-client";
+import {
+  type DeletedData,
+  type DeleteUserRequest,
+  SudojoClient,
+} from "../network/sudojo-client";
 
 /**
  * Hook to fetch user info including admin status.
@@ -121,5 +128,68 @@ export const useSudojoUserSubscription = (
     staleTime: STALE_TIMES.USER_SUBSCRIPTION,
     ...options,
     enabled: isEnabled,
+  });
+};
+
+/** Arguments for one account deletion. */
+export interface DeleteUserVariables {
+  /** Firebase ID token of the user being deleted (required). */
+  token: string;
+  /** Firebase UID. Must match the token's user, or the API returns 403. */
+  userId: string;
+  /** Optional OAuth tokens for the API to revoke while deleting. */
+  providerTokens?: DeleteUserRequest | undefined;
+}
+
+/**
+ * Hook to delete the signed-in user's account (`DELETE /api/v1/users/:userId`).
+ *
+ * **Requires Firebase authentication.** The API refuses while a subscription
+ * is active (409) and for an already deleted account (410); the mutation then
+ * rejects with the API's message. On success the API has marked the account
+ * deleted, revoked any `providerTokens`, and deleted the Firebase user
+ * server-side (Firebase Admin), so no client-side Firebase deletion is needed.
+ * This replaces `@sudobility/auth_lib`'s `deleteAccount`, which makes the same
+ * request (it sends no token of its own and relies on an authenticated
+ * `NetworkClient`) and does nothing else.
+ *
+ * Callers still need to sign out locally afterwards (e.g. auth_lib / Firebase
+ * `signOut()`), because the local Firebase session is not cleared by the
+ * server-side deletion.
+ *
+ * On success, removes every cached query for this user and the user's
+ * gamification stats and point history.
+ *
+ * @param networkClient - Network client for making HTTP requests
+ * @param baseUrl - Base URL of the Sudojo API
+ * @returns A UseMutationResult. Call `mutateAsync({ token, userId })`.
+ */
+export const useSudojoDeleteUser = (
+  networkClient: NetworkClient,
+  baseUrl: string,
+): UseMutationResult<BaseResponse<DeletedData>, Error, DeleteUserVariables> => {
+  const client = useMemo(
+    () => new SudojoClient(networkClient, baseUrl),
+    [networkClient, baseUrl],
+  );
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      token,
+      userId,
+      providerTokens,
+    }: DeleteUserVariables) => client.deleteUser(token, userId, providerTokens),
+    onSuccess: (_data, variables) => {
+      queryClient.removeQueries({
+        queryKey: [...queryKeys.sudojo.all(), "users", variables.userId],
+      });
+      queryClient.removeQueries({
+        queryKey: queryKeys.sudojo.gamificationStats(),
+      });
+      queryClient.removeQueries({
+        queryKey: [...queryKeys.sudojo.all(), "gamification", "history"],
+      });
+    },
   });
 };

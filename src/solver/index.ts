@@ -4,8 +4,16 @@ export {
   solverQueryKeys,
   SOLVER_STALE_TIMES,
   useSolverGenerate,
+  useSolverGenerateMutation,
   useSolverSolve,
+  useSolverSolveMutation,
   useSolverValidate,
+  useSolverValidateMutation,
+} from "./hooks";
+export type {
+  SolverGenerateVariables,
+  SolverSolveVariables,
+  SolverValidateVariables,
 } from "./hooks";
 
 // Re-export solver types from shared package
